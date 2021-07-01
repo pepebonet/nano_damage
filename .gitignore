@@ -1,2 +1,3 @@
 outputs/*
 *png
+scripts/__pycache__
