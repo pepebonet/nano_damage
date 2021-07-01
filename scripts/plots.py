@@ -1,8 +1,14 @@
-#!/usr/bin/envs python3
+#!/usr/bin/env python3
+import os
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 import utils as ut
 
+
+# ------------------------------------------------------------------------------
+# CHROMATIN ANALYSIS
+# ------------------------------------------------------------------------------
 
 #Obtain context plots for triplets and pentamers
 def obtain_plots(data, outdir, context, chunk):
@@ -62,4 +68,77 @@ def obtain_plots(data, outdir, context, chunk):
     fig.tight_layout()
 
     plt.savefig(outdir)
+    plt.close()
+
+
+
+def obs_exp_simple_plot(data, output, pval, label=''):
+    fig, ax = plt.subplots(figsize=(5, 5))
+    out_file = os.path.join(output, '{}.png'.format(label))
+
+    sns.barplot(x=list(data.keys()), y=list(data.values()), palette=['#08519c', '#a6cee3'])
+    
+    ax.set_title('p-value: {}'.format(pval))
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    fig.tight_layout()
+    plt.savefig(out_file)
+    plt.close()
+
+
+def obs_exp_multi_plots(data, output, label=''):
+    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(15, 5)) 
+ 
+    out_file = os.path.join(output, '{}.png'.format(label))  
+    i = 0
+    for k, v in data.items():
+        sns.barplot(x=list(v.keys()), y=list(v.values()), ax=ax[i])
+        ax[i].title.set_text(k)
+        ax[i].spines['top'].set_visible(False)
+        ax[i].spines['right'].set_visible(False)
+        ax[i].set_xlabel('')
+        ax[i].tick_params(labelrotation=20)
+        i += 1 
+    
+    plt.tight_layout()
+
+    plt.savefig(out_file)
+    plt.close()
+
+
+def plot_cosine(df, output):
+    fig, ax = plt.subplots(figsize=(7, 4))
+    
+    plt.errorbar(
+        df['DNA structure'], df['Cosine-similarity'], ls='none',
+        marker='o', mfc='#08519c', mec='black', ms=10, mew=1, 
+        ecolor='#08519c', capsize=2.5, elinewidth=0.7, capthick=0.7
+    )
+
+    plt.ylim(0, 1.1)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    ax.set_xlabel("Genomic regions", fontsize=14)
+    ax.set_ylabel("Cosine similarity", fontsize=14)
+
+    from matplotlib.offsetbox import AnchoredText
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    title_text = 'Genomic regions similarity'
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("top", size="7.5%", pad=0)
+    cax.get_xaxis().set_visible(False)
+    cax.get_yaxis().set_visible(False)
+
+    cax.set_facecolor('#c7cbd4')
+    at = AnchoredText(title_text, loc=10, frameon=False,
+            prop=dict(backgroundcolor='#c7cbd4',
+                    size=8, color='black'))
+    cax.add_artist(at)
+
+    fig.tight_layout()
+    out_file = os.path.join(output, 'cosine_similarity.pdf')
+    plt.savefig(out_file)
     plt.close()
