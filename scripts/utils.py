@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 
-
+import os
 
 
 base_dict = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G'}
@@ -64,3 +65,23 @@ def order_plots(data, context, cent=None):
 
     return order_plot, y
 
+
+# ------------------------------------------------------------------------------
+# OUTPUT FUNCTIONS
+# ------------------------------------------------------------------------------
+
+
+#Write outputs from enrichment analysis for Mao and Nanopore
+def write_outputs(df, triplet, pentamer, out_dir, method, base=''):
+    df.to_csv(os.path.join(
+        out_dir, 'damage_most_sig_{}.tsv'.format(method)), 
+        sep='\t', index=False
+    )
+    triplet.to_csv(os.path.join(
+        out_dir, 'triplet_normalized_{}.tsv'.format(method)), 
+        sep='\t', index=False
+    )
+    pentamer.to_csv(os.path.join(
+        out_dir, 'pentamer_normalized_{}.tsv'.format(method)), 
+        sep='\t', index=False
+    )

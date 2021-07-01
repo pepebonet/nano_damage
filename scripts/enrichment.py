@@ -122,6 +122,11 @@ def main(data, chrom_len, output):
         triplet_context, penta_context, triplet_dir, 
         penta_dir, output
     )
+
+    #write output
+    ut.write_outputs(
+        df, triplet_context, penta_context, output, 'Nanopore'
+    )
     
 
 if __name__ == "__main__":
