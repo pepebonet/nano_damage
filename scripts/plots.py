@@ -1,4 +1,4 @@
-
+#!/usr/bin/envs python3
 import matplotlib.pyplot as plt
 
 import utils as ut
