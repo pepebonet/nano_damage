@@ -29,7 +29,7 @@ def get_contexts(df, chrom_len):
     
     penta_exp = get_context_counts(df, 'PENTAMER')
     triplet_exp = get_context_counts(df, 'TRIPLET')
-    
+
     triplet_context = get_context_norm(triplet_ref, triplet_exp)
     penta_context = get_context_norm(penta_ref, penta_exp)  
 
@@ -65,9 +65,9 @@ def slicing_window(seq, n):
 
 def obtain_context(df, cont, cent):
     if cont == 5:
-        return df['mer'][5:10]
+        return df['mer'][8:13]
     else: 
-        return df['mer'][6:9]
+        return df['mer'][9:12]
 
 
 def get_context_counts(df, context):
@@ -79,8 +79,11 @@ def get_context_norm(ref, exp):
     new_d = {}
     for el in exp:
         if el != '-':
-            norm = exp.get(el) / ref.get(el)
-            new_d.update({el : norm})
+            try:
+                norm = exp.get(el) / ref.get(el)
+                new_d.update({el : norm})
+            except:
+                import pdb;pdb.set_trace()
     
     df = pd.DataFrame(new_d.items(), columns=['CONTEXT', 'REF_NORM'])
     df['TOTAL_NORM'] = df['REF_NORM'] / df['REF_NORM'].sum()
