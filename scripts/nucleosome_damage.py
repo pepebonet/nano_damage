@@ -180,7 +180,7 @@ def main(damage, nucleosome_information, base_study, output):
     #obtain start and end positions
     damage = add_dam_se(damage)
     nucleosomes = add_nuc_se(nucleosomes)
-    
+
     #obtain norm nucleotide counts
     norms, triplet_norm = obtain_nuc_norm(nucleosomes)
 
@@ -193,7 +193,7 @@ def main(damage, nucleosome_information, base_study, output):
 
     #Select only damage in the nucleosome regions
     df_nuc = df[df['Overlapped'] != 0]
-    
+    import pdb;pdb.set_trace()
     #Nucleosome enrichment as enrichment.py
     obtain_nucleosome_enrichment(df_nuc, triplet_norm, output)
 
