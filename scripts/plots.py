@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 import utils as ut
+from scipy.signal import savgol_filter
 
 
 # ------------------------------------------------------------------------------
@@ -141,4 +142,67 @@ def plot_cosine(df, output):
     fig.tight_layout()
     out_file = os.path.join(output, 'cosine_similarity.pdf')
     plt.savefig(out_file)
+    plt.close()
+
+
+
+# ------------------------------------------------------------------------------
+# NUCLEOSOME ANALYSIS
+# ------------------------------------------------------------------------------
+
+def plot_per_base_enrichment(df, outdir):
+    x = df['POSITION'].tolist()
+    y = df['NORM_2'].tolist()
+    # Smoothing using: window size 51, polynomial order 3
+    yhat = savgol_filter(y, 9, 2)
+
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(20, 5),
+                            gridspec_kw={'height_ratios': [30, 1]})
+
+    #1st axis. Lower color plot
+    colors = []
+    bot = 0.5
+    for ix, c in enumerate(ut.chunks(yhat, 10)):
+        if ix % 2 == 0:
+            color = '#006400'
+        else:
+            color = '#FFB90F'
+        colors.extend([color for s in c])
+        axs[1].barh(1, 10, left=bot, color=color)
+        bot += 10
+
+    axs[1].set_xlim(-1, 148)
+    axs[1].spines['top'].set_visible(False)
+    axs[1].spines['bottom'].set_visible(False)
+    axs[1].spines['left'].set_visible(False)
+    axs[1].spines['right'].set_visible(False)
+
+    axs[1].get_yaxis().set_visible(False)
+    axs[1].get_xaxis().set_visible(False)
+
+    #2nd axis. Plot
+    plt.sca(axs[0])
+    axs[0].plot(x, yhat, linewidth=4)
+    # axs.set_xticks(order_plot)
+    axs[0].set_ylabel('Relative Probability',fontsize=24)
+    axs[0].spines['top'].set_visible(False)
+    axs[0].spines['right'].set_visible(False)
+    axs[0].set_xlim(-1, 148)
+    plt.setp([axs[0].get_xticklines(), axs[0].get_yticklines()], color='grey')
+
+    axs[0].xaxis.set_ticks_position('none')
+    for axis in ['top', 'bottom', 'left', 'right']:
+        axs[0].spines[axis].set_linewidth(0.2)
+
+    axs[0].xaxis.set_tick_params(pad=0.5)
+    axs[0].yaxis.set_tick_params(pad=0.5, width=0.5)
+
+    plt.xticks(fontsize=20, rotation=90)
+    plt.yticks(fontsize=16)
+    plt.tick_params(axis='both', which='both', bottom=False, left = False)
+    axs[1].set_xlabel('Position', fontsize=24)
+
+    fig.tight_layout()
+
+    plt.savefig(outdir)
     plt.close()
