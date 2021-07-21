@@ -150,26 +150,34 @@ def plot_cosine(df, output):
 # NUCLEOSOME ANALYSIS
 # ------------------------------------------------------------------------------
 
-def plot_per_base_enrichment(df, outdir):
+def plot_per_base_enrichment(df, outdir, label):
     x = df['POSITION'].tolist()
-    y = df['NORM_2'].tolist()
+
+    if label == 'smooth':
+        yhat = df['smooth'].tolist()
+    else:
+        yhat = df['NORM_2'].tolist()
+        
     # Smoothing using: window size 51, polynomial order 3
-    yhat = savgol_filter(y, 9, 2)
+    yhat = savgol_filter(yhat, 9, 3)
 
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(20, 5),
                             gridspec_kw={'height_ratios': [30, 1]})
 
     #1st axis. Lower color plot
-    colors = []
-    bot = 0.5
-    for ix, c in enumerate(ut.chunks(yhat, 10)):
-        if ix % 2 == 0:
-            color = '#006400'
+
+    aa = [el * 146 / 23 for el in list(range(23))]
+    for ix, j in enumerate(aa):
+        if ix in [10, 11, 12]:
+                color = 'white'
         else:
-            color = '#FFB90F'
-        colors.extend([color for s in c])
-        axs[1].barh(1, 10, left=bot, color=color)
-        bot += 10
+            if ix % 2 == 0:
+                color = '#006400'
+            else:
+                color = '#FFB90F'
+        
+        axs[1].barh(1, aa[1], left=j, color=color)
+        
 
     axs[1].set_xlim(-1, 148)
     axs[1].spines['top'].set_visible(False)
