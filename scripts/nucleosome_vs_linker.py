@@ -7,6 +7,7 @@ import pandas as pd
 from operator import add
 from bgreference import refseq
 from collections import Counter
+from scipy.signal import savgol_filter
 
 import utils as ut
 import plots as pl
@@ -43,7 +44,7 @@ def chr2num(df):
 
 #Obtain base for the position in the file
 def annot(df):
-    seq_pos = refseq('saccer3', df['CHROM'], df['Start'], 147)
+    seq_pos = refseq('saccer3', df['CHROM'], df['Start'], 400)
     return seq_pos
 
 
@@ -59,7 +60,7 @@ def obtain_nuc_norm(df):
     for i in range(1, len(seq)):
         #Ignore any nucleosome at the end of the chromosome 
         #Number of bases lower than 147 
-        if len(list(seq[i])) != 147:
+        if len(list(seq[i])) != 400:
             continue
         # add sequence of every nucleosome for each on of the 147 bases
         seq2count = list(map(add, seq2count, seq[i]))
@@ -80,20 +81,43 @@ def intersect(damage, nucleosomes):
     b = pybedtools.BedTool.from_dataframe(nucleosomes)
     result = a.intersect(b, wao = True)
 
-    df = pd.read_csv(
-        result.fn, sep='\t', names=['CHROM', 'Start', 'End', 'SEQ', 'strand', 
-        'mer', 'min coverage', 'untreated_freq', 'treated_freq', 'group', 
-        'motif_1 DRWGGDD P-value', 'motif', 'value', 'PENTAMER', 'TRIPLET', 
-        'Chr_nuc', 'Start_nuc', 'End_nuc', 'Val_1', 'Val_2', 'Center_nuc', 
-        'Overlapped'])
+    if damage.shape[1] == 15:
+        df = pd.read_csv(
+            result.fn, sep='\t', names=['CHROM', 'Start', 'End', 'SEQ', 'strand', 
+            'mer', 'min coverage', 'untreated_freq', 'treated_freq', 'group', 
+            'motif_1 DRWGGDD P-value', 'motif', 'value', 'PENTAMER', 'TRIPLET', 
+            'Chr_nuc', 'Start_nuc', 'End_nuc', 'Val_1', 'Val_2', 'Center_nuc', 
+            'Overlapped'])
+    else: 
+        df = pd.read_csv(
+            result.fn, sep='\t', names=['CHROM', 'Start', 'End', 'SEQ', 'strand', 
+            'mer', 'min coverage', 'untreated_freq', 'treated_freq', 'value', 
+            'PENTAMER', 'TRIPLET', 'Chr_nuc', 'Start_nuc', 'End_nuc',
+            'Val_1', 'Val_2', 'Center_nuc', 'Overlapped'])
+
     return df
 
 
+# #Per base enrichment
+# def obtain_per_base_enrichment(df_nuc, norm, base):
+#     counts_position = Counter(df_nuc['End_nuc'] - df_nuc['End'])
+    
+#     df = pd.DataFrame(counts_position.items(), columns=['Position', 'Damage'])
+#     df.sort_values(by=['Position'], inplace=True)
+
+#     return df.reset_index(drop=True)
+
 #Per base enrichment
 def obtain_per_base_enrichment(df_nuc, norm, base):
+    d = {}
+    #Add the nucleosome postion of the damage
     counts_position = Counter(df_nuc['End_nuc'] - df_nuc['End'])
+    for k, v in counts_position.items():
+        n = v / norm[k][base]
+        d.update({k : n})
     
-    df = pd.DataFrame(counts_position.items(), columns=['Position', 'Damage'])
+    df = pd.DataFrame(d.items(), columns=['Position', 'NORM'])
+    df['NORM_2'] = df['NORM'] / df['NORM'].sum()
     df.sort_values(by=['Position'], inplace=True)
 
     return df.reset_index(drop=True)
@@ -115,31 +139,6 @@ def load_data(damage_path, nucleosome_info, base_study):
     damage = damage.rename(columns={"chrom": "CHROM", "base": "SEQ"})
 
     return damage, nucleosomes
-
-def savitzky_golay(y, window_size, order, deriv=0, rate=1):
-    import numpy as np
-    from math import factorial
-
-    try:
-        window_size = np.abs(np.int(window_size))
-        order = np.abs(np.int(order))
-    except ValueError:
-        raise ValueError("window_size and order have to be of type int")
-    if window_size % 2 != 1 or window_size < 1:
-        raise TypeError("window_size size must be a positive odd number")
-    if window_size < order + 2:
-        raise TypeError("window_size is too small for the polynomials order")
-    order_range = range(order+1)
-    half_window = (window_size -1) // 2
-    # precompute coefficients
-    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
-    m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
-    # pad the signal at the extremes with
-    # values taken from the signal itself
-    firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
-    lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
-    y = np.concatenate((firstvals, y, lastvals))
-    return np.convolve( m[::-1], y, mode='valid')
 
 
 # ------------------------------------------------------------------------------
@@ -183,13 +182,13 @@ def main(damage, nucleosome_information, base_study, output):
 
     #obtain per-base enrichment within the nucleosome
     enrichment_df = obtain_per_base_enrichment(df_nuc, norms, base_study)
-
-    enrichment_df['smooth_damage']= savitzky_golay(
-        enrichment_df['Damage'].values, 31, 2
+    
+    enrichment_df['smooth_damage']= savgol_filter(
+        enrichment_df['NORM_2'].values, 31, 3
     )
 
     pl.plot_damage_nuc_linker(enrichment_df, output)
-    import pdb;pdb.set_trace()
+    
 
 
 if __name__ == '__main__':
