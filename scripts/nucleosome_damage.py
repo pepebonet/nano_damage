@@ -79,13 +79,21 @@ def intersect(damage, nucleosomes):
     a = pybedtools.BedTool.from_dataframe(damage)
     b = pybedtools.BedTool.from_dataframe(nucleosomes)
     result = a.intersect(b, wao = True)
+    
+    if damage.shape[1] == 15:
+        df = pd.read_csv(
+            result.fn, sep='\t', names=['CHROM', 'Start', 'End', 'SEQ', 'strand', 
+            'mer', 'min coverage', 'untreated_freq', 'treated_freq', 'group', 
+            'motif_1 DRWGGDD P-value', 'motif', 'value', 'PENTAMER', 'TRIPLET', 
+            'Chr_nuc', 'Start_nuc', 'End_nuc', 'Val_1', 'Val_2', 'Center_nuc', 
+            'Overlapped'])
+    else: 
+        df = pd.read_csv(
+            result.fn, sep='\t', names=['CHROM', 'Start', 'End', 'SEQ', 'strand', 
+            'mer', 'min coverage', 'untreated_freq', 'treated_freq', 'value', 
+            'PENTAMER', 'TRIPLET', 'Chr_nuc', 'Start_nuc', 'End_nuc',
+            'Val_1', 'Val_2', 'Center_nuc', 'Overlapped'])
 
-    df = pd.read_csv(
-        result.fn, sep='\t', names=['CHROM', 'Start', 'End', 'SEQ', 'strand', 
-        'mer', 'min coverage', 'untreated_freq', 'treated_freq', 'group', 
-        'motif_1 DRWGGDD P-value', 'motif', 'value', 'PENTAMER', 'TRIPLET', 
-        'Chr_nuc', 'Start_nuc', 'End_nuc', 'Val_1', 'Val_2', 'Center_nuc', 
-        'Overlapped'])
     return df
 
 
@@ -118,11 +126,12 @@ def obtain_nucleosome_enrichment(df, triplet_norm, out_dir):
 #Employ EWA to smooth a function. Related to AdamOptimzer of AI. 
 def exp_weighted_averages(df):
     to_s = df.NORM_2.tolist()
-    B = 0.5; V = [to_s[0] - to_s[0] * (1 - B)]
+    B = 0.8; V = [to_s[0] - to_s[0] * (1 - B)]
     for i in range(len(to_s)):
         V.append(B * V[i] + (1 - B) * to_s[i])
 
     df['smooth'] = V[1:]
+
     return df
 
 
@@ -193,13 +202,13 @@ def main(damage, nucleosome_information, base_study, output):
 
     #Select only damage in the nucleosome regions
     df_nuc = df[df['Overlapped'] != 0]
-    import pdb;pdb.set_trace()
+    print(df_nuc.shape)
     #Nucleosome enrichment as enrichment.py
     obtain_nucleosome_enrichment(df_nuc, triplet_norm, output)
 
     #obtain per-base enrichment within the nucleosome
     enrichment_df = obtain_per_base_enrichment(df_nuc, norms, base_study)
-
+    
     #Exponentially weighted averages for smoothing
     enrichment_df_smooth = exp_weighted_averages(enrichment_df)
 
@@ -207,7 +216,12 @@ def main(damage, nucleosome_information, base_study, output):
         output,'study_per_base_smooth_{}'.format(base_study)
     )
     
-    pl.plot_per_base_enrichment(enrichment_df_smooth, per_base_dir)
+    pl.plot_per_base_enrichment(enrichment_df_smooth, per_base_dir, label='smooth')
+
+    per_base_dir = os.path.join(
+        output,'study_per_base_{}'.format(base_study)
+    )
+    pl.plot_per_base_enrichment(enrichment_df, per_base_dir, label='norm')
 
 
 if __name__ == '__main__':
