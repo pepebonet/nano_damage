@@ -219,7 +219,11 @@ def plot_per_base_enrichment(df, outdir, label):
 def plot_damage_nuc_linker(df, output):
     fig, ax = plt.subplots(figsize=(5, 5))
     # import pdb; pdb.set_trace()
-    plt.plot(df['Position'].values, df['smooth_damage'].values)
+    plt.plot(df['Position'].values, df['smooth_damage'].values, linewidth=2)
+
+    plt.vlines(200, ymin=0.002, ymax=0.003, linestyle='dashed', color='grey')
+    plt.vlines(273, ymin=0.002, ymax=0.003, linestyle='dashed', color='grey')
+    plt.vlines(127, ymin=0.002, ymax=0.003, linestyle='dashed', color='grey')
     
     fig.tight_layout()
     out_file = os.path.join(output, 'damage_nuc_linker.pdf')
