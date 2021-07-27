@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pandas as pd
 
-import utils_structure as ut
+import utils as ut
 
 
 def get_open_close_damage(open_pos, close_pos, damage):

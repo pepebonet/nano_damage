@@ -2,7 +2,7 @@
 import pandas as pd
 import bottleneck as bn
 
-import utils_structure as ut
+import utils as ut
 
 def add_dam_se(df):
     df['Start'] = df['pos'] - 1

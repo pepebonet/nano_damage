@@ -4,7 +4,7 @@ from collections import Counter
 
 from bgreference import refseq
 
-import utils_structure as ut
+import utils as ut
 
 
 def polII_context1(df, sub, add, strand='+'):
