@@ -3,6 +3,7 @@
 import os
 import click
 import pybedtools
+import numpy as np
 import pandas as pd 
 from operator import add
 from bgreference import refseq
@@ -102,15 +103,14 @@ def obtain_per_base_enrichment(df_nuc, norm, base):
     d = {}
     #Add the nucleosome postion of the damage
     #TODO <JB> Fix a possible problem with the strand 
-    import pdb;pdb.set_trace()
-    neg = df_nuc[df_nuc['strand'] == '-']
-    counts_neg = Counter(neg['End_nuc'] - neg['Start'])
-    pos = df_nuc[df_nuc['strand'] == '+']
-    counts_pos = Counter(pos['End'] - pos['Start_nuc'])
-    counts_position = counts_pos + counts_neg
-    # counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
+    # neg = df_nuc[df_nuc['strand'] == '-']
+    # counts_neg = Counter(neg['End_nuc'] - neg['Start'])
+    # pos = df_nuc[df_nuc['strand'] == '+']
+    # counts_pos = Counter(pos['End'] - pos['Start_nuc'])
+    # counts_position = counts_pos + counts_neg
+    counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
     for k, v in counts_position.items():
-        n = v / norm[k - 1][base]
+        n = v / norm[k - 1][base[int(np.floor(len(base) / 2))]]
         d.update({k - 1 : n})
     
     df = pd.DataFrame(d.items(), columns=['POSITION', 'NORM'])
@@ -159,28 +159,43 @@ def load_data(damage_path, nucleosome_info, base_study):
     if 'index' in damage.columns: 
         damage = damage.drop('index', axis=1)
     damage = damage.rename(columns={"chrom": "CHROM", "base": "SEQ"})
-    damage = damage[damage['SEQ'] == base_study]
 
-    if damage.empty: 
-        raise Exception(
-            'The nucleotide accession are A, C, T and G '\
-            'but {} was given. If error persists, the shape of the '\
-            'remaining dataframe after filetring is 0'.format(base_study)
-        )
-    else: 
-        print(
-            'Initializing the analysis on nucleotide: {}'.format(base_study)
-        )
-        return damage, nucleosomes
+    if len(base_study) == 1:
+        damage = damage[damage['SEQ'] == base_study]
+    else:
+        damage['Motif'] = damage['mer'].apply(obtain_context, cent=base_study)
+        damage = damage[damage['Motif'] == base_study]
+        damage = damage.drop(['Motif'], axis=1)
+
+    print('Initializing the analysis on nucleotide: {}'.format(base_study))
+
+    return damage, nucleosomes
+
+
+def obtain_context(df, cent):
+
+    mid = int(np.floor(len(df) / 2))
+
+    if len(cent) % 2 == 0:
+        plus = int(len(cent) / 2)
+        less = int(len(cent) / 2 - 1)
+        return df[mid - less: mid + plus + 1]
+    
+    else:
+        plus = int(np.floor(len(cent) / 2))
+        less = int(np.floor(len(cent) / 2))
+        return df[mid - less: mid + plus + 1]
+        
 
 
 def get_random_damage(norms, base):
 
     tot_bases = 0
     for el in norms: 
-        tot_bases += el[base]
+        tot_bases += el[base[int(np.floor(len(base) / 2))]]
 
-    random_damage = [i[base] / tot_bases for i in norms]
+    random_damage = [i[base[int(np.floor(len(base) / 2))]] / \
+        tot_bases for i in norms]
 
     return random_damage
     

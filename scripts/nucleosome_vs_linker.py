@@ -3,6 +3,7 @@
 import os
 import click
 import pybedtools
+import numpy as np
 import pandas as pd 
 from operator import add
 from bgreference import refseq
@@ -98,23 +99,13 @@ def intersect(damage, nucleosomes):
 
     return df
 
-
-# #Per base enrichment
-# def obtain_per_base_enrichment(df_nuc, norm, base):
-#     counts_position = Counter(df_nuc['End_nuc'] - df_nuc['End'])
-    
-#     df = pd.DataFrame(counts_position.items(), columns=['Position', 'Damage'])
-#     df.sort_values(by=['Position'], inplace=True)
-
-#     return df.reset_index(drop=True)
-
 #Per base enrichment
 def obtain_per_base_enrichment(df_nuc, norm, base):
     d = {}
     #Add the nucleosome postion of the damage
     counts_position = Counter(df_nuc['End_nuc'] - df_nuc['End'])
     for k, v in counts_position.items():
-        n = v / norm[k][base]
+        n = v / norm[k][base[int(np.floor(len(base) / 2))]]
         d.update({k : n})
     
     df = pd.DataFrame(d.items(), columns=['Position', 'NORM'])
@@ -137,18 +128,42 @@ def load_data(damage_path, nucleosome_info, base_study):
     #Filter data for only the target nucleotide
     if 'index' in damage.columns: 
         damage = damage.drop('index', axis=1)
+
     damage = damage.rename(columns={"chrom": "CHROM", "base": "SEQ"})
+    
+    if len(base_study) == 1:
+        damage = damage[damage['SEQ'] == base_study]
+    else:
+        damage['Motif'] = damage['mer'].apply(obtain_context, cent=base_study)
+        damage = damage[damage['Motif'] == base_study]
+        damage = damage.drop(['Motif'], axis=1)
 
     return damage, nucleosomes
+
+
+def obtain_context(df, cent):
+
+    mid = int(np.floor(len(df) / 2))
+
+    if len(cent) % 2 == 0:
+        plus = int(len(cent) / 2)
+        less = int(len(cent) / 2 - 1)
+        return df[mid - less: mid + plus + 1]
+    
+    else:
+        plus = int(np.floor(len(cent) / 2))
+        less = int(np.floor(len(cent) / 2))
+        return df[mid - less: mid + plus + 1]
 
 
 def get_random_damage(norms, base):
 
     tot_bases = 0
     for el in norms: 
-        tot_bases += el[base]
+        tot_bases += el[base[int(np.floor(len(base) / 2))]]
 
-    random_damage = [i[base] / tot_bases for i in norms]
+    random_damage = [i[base[int(np.floor(len(base) / 2))]] / \
+        tot_bases for i in norms]
 
     df = pd.DataFrame(random_damage).reset_index()
     df.columns = ['Position', 'Random Model']
