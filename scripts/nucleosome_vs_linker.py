@@ -79,6 +79,7 @@ def obtain_nuc_norm(df):
 def intersect(damage, nucleosomes):
     a = pybedtools.BedTool.from_dataframe(damage)
     b = pybedtools.BedTool.from_dataframe(nucleosomes)
+    
     result = a.intersect(b, wao = True)
 
     if damage.shape[1] == 15:
@@ -141,6 +142,43 @@ def load_data(damage_path, nucleosome_info, base_study):
     return damage, nucleosomes
 
 
+def get_random_damage(norms, base):
+
+    tot_bases = 0
+    for el in norms: 
+        tot_bases += el[base]
+
+    random_damage = [i[base] / tot_bases for i in norms]
+
+    df = pd.DataFrame(random_damage).reset_index()
+    df.columns = ['Position', 'Random Model']
+    
+    return df
+
+
+def clean_overlaps(df):
+
+    starts = df['Start'].values
+    chrom = df['CHROM'].values
+    new_end = []; new_start = []
+    new_start.append(df['Start'].values[0])
+
+    for i, end in enumerate(df['End'].values[:-1]):
+        if (end >= starts[i + 1]) and (chrom[i] == chrom[i + 1]):
+            change = int((end - starts[i + 1]) / 2)
+            new_end.append(end - change)
+            new_start.append(starts[i + 1] + change)
+        else:
+            new_end.append(end); new_start.append(starts[i + 1])
+
+    new_end.append(df['End'].values[-1])
+
+    df['End'] = new_end
+    df['Start'] = new_start
+
+    return df
+
+
 # ------------------------------------------------------------------------------
 # CLICK
 # ------------------------------------------------------------------------------
@@ -166,9 +204,13 @@ def main(damage, nucleosome_information, base_study, output):
     #obtain start and end positions
     damage = add_dam_se(damage)
     nucleosomes = add_nuc_se(nucleosomes)
-    
+    # nucleosomes = clean_overlaps(nucleosomes)
+
     #obtain norm nucleotide counts
     norms, triplet_norm = obtain_nuc_norm(nucleosomes)
+
+    #obtain random model of damage
+    random_model = get_random_damage(norms, base_study)
 
     #chr in int format for pybedtools
     damage_bed = chr2num(damage)
@@ -183,8 +225,15 @@ def main(damage, nucleosome_information, base_study, output):
     #obtain per-base enrichment within the nucleosome
     enrichment_df = obtain_per_base_enrichment(df_nuc, norms, base_study)
     
+    #add random model to the enrichment. Be careful with dimensions here 
+    enrichment_df = pd.merge(enrichment_df, random_model, how='inner', on='Position')
+    
     enrichment_df['smooth_damage']= savgol_filter(
         enrichment_df['NORM_2'].values, 31, 3
+    )
+
+    enrichment_df['smooth_random']= savgol_filter(
+        enrichment_df['Random Model'].values, 31, 3
     )
 
     pl.plot_damage_nuc_linker(enrichment_df, output)
