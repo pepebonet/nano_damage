@@ -102,7 +102,13 @@ def obtain_per_base_enrichment(df_nuc, norm, base):
     d = {}
     #Add the nucleosome postion of the damage
     #TODO <JB> Fix a possible problem with the strand 
-    counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
+    import pdb;pdb.set_trace()
+    neg = df_nuc[df_nuc['strand'] == '-']
+    counts_neg = Counter(neg['End_nuc'] - neg['Start'])
+    pos = df_nuc[df_nuc['strand'] == '+']
+    counts_pos = Counter(pos['End'] - pos['Start_nuc'])
+    counts_position = counts_pos + counts_neg
+    # counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
     for k, v in counts_position.items():
         n = v / norm[k - 1][base]
         d.update({k - 1 : n})
