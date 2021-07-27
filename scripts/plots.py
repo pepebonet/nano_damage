@@ -154,12 +154,16 @@ def plot_per_base_enrichment(df, outdir, label):
     x = df['POSITION'].tolist()
 
     if label == 'smooth':
-        yhat = df['smooth'].tolist()
+        yhat = df['NORM_2_smooth'].tolist()
+        yrandom = df['Random Model_smooth'].tolist()
     else:
         yhat = df['NORM_2'].tolist()
-        
+        yrandom = df['Random Model'].tolist()
+    
+    # import pdb;pdb.set_trace()
     # Smoothing using: window size 51, polynomial order 3
     yhat = savgol_filter(yhat, 9, 3)
+    yrandom = savgol_filter(yrandom, 9, 3)
 
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(20, 5),
                             gridspec_kw={'height_ratios': [30, 1]})
@@ -191,6 +195,7 @@ def plot_per_base_enrichment(df, outdir, label):
     #2nd axis. Plot
     plt.sca(axs[0])
     axs[0].plot(x, yhat, linewidth=4)
+    axs[0].plot(x, yrandom, linewidth=2, color='grey', ls='--')
     # axs.set_xticks(order_plot)
     axs[0].set_ylabel('Relative Probability',fontsize=24)
     axs[0].spines['top'].set_visible(False)
