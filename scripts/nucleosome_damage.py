@@ -125,12 +125,15 @@ def obtain_nucleosome_enrichment(df, triplet_norm, out_dir):
 
 #Employ EWA to smooth a function. Related to AdamOptimzer of AI. 
 def exp_weighted_averages(df):
-    to_s = df.NORM_2.tolist()
-    B = 0.8; V = [to_s[0] - to_s[0] * (1 - B)]
-    for i in range(len(to_s)):
-        V.append(B * V[i] + (1 - B) * to_s[i])
 
-    df['smooth'] = V[1:]
+    for el in ['NORM_2', 'Random Model']:
+        to_s = df[el].tolist()
+        B = 0.8; V = [to_s[0] - to_s[0] * (1 - B)]
+        for i in range(len(to_s)):
+            V.append(B * V[i] + (1 - B) * to_s[i])
+
+        name = '{}_smooth'.format(el)
+        df[name] = V[1:]
 
     return df
 
@@ -164,6 +167,18 @@ def load_data(damage_path, nucleosome_info, base_study):
         return damage, nucleosomes
 
 
+def get_random_damage(norms, base):
+
+    tot_bases = 0
+    for el in norms: 
+        tot_bases += el[base]
+
+    random_damage = [i[base] / tot_bases for i in norms]
+
+    return random_damage
+    
+
+
 # ------------------------------------------------------------------------------
 # CLICK
 # ------------------------------------------------------------------------------
@@ -193,6 +208,9 @@ def main(damage, nucleosome_information, base_study, output):
     #obtain norm nucleotide counts
     norms, triplet_norm = obtain_nuc_norm(nucleosomes)
 
+    #obtain random model of damage
+    random_model = get_random_damage(norms, base_study)
+
     #chr in int format for pybedtools
     damage_bed = chr2num(damage)
     nucleosomes_bed = chr2num(nucleosomes)
@@ -208,7 +226,10 @@ def main(damage, nucleosome_information, base_study, output):
 
     #obtain per-base enrichment within the nucleosome
     enrichment_df = obtain_per_base_enrichment(df_nuc, norms, base_study)
-    
+
+    #add random model to the enrichment. Be careful with dimensions here 
+    enrichment_df['Random Model'] = random_model[:-1]
+       
     #Exponentially weighted averages for smoothing
     enrichment_df_smooth = exp_weighted_averages(enrichment_df)
 
