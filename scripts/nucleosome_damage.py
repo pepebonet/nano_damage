@@ -20,7 +20,7 @@ import plots as pl
 def add_nuc_se(df):
     df['Nuc_center'] = df['End']
     df['Start'] = df['End'] - 73
-    df['End'] = df['End'] + 73
+    df['End'] = df['End'] + 74
     df = df[df['Start'] > 0].reset_index(drop=True)
     return df
 
@@ -101,10 +101,11 @@ def intersect(damage, nucleosomes):
 def obtain_per_base_enrichment(df_nuc, norm, base):
     d = {}
     #Add the nucleosome postion of the damage
-    counts_position = Counter(df_nuc['End_nuc'] - df_nuc['End'])
+    #TODO <JB> Fix a possible problem with the strand 
+    counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
     for k, v in counts_position.items():
-        n = v / norm[k][base]
-        d.update({k : n})
+        n = v / norm[k - 1][base]
+        d.update({k - 1 : n})
     
     df = pd.DataFrame(d.items(), columns=['POSITION', 'NORM'])
     df['NORM_2'] = df['NORM'] / df['NORM'].sum()
@@ -228,7 +229,7 @@ def main(damage, nucleosome_information, base_study, output):
     enrichment_df = obtain_per_base_enrichment(df_nuc, norms, base_study)
 
     #add random model to the enrichment. Be careful with dimensions here 
-    enrichment_df['Random Model'] = random_model[:-1]
+    enrichment_df['Random Model'] = random_model
        
     #Exponentially weighted averages for smoothing
     enrichment_df_smooth = exp_weighted_averages(enrichment_df)
