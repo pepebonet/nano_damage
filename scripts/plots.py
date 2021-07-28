@@ -221,9 +221,9 @@ def plot_per_base_enrichment(df, outdir, label):
     plt.close()
 
 
-def plot_damage_nuc_linker(df, output):
+def plot_damage_nuc_linker(df, output, nuc_signal):
     fig, ax = plt.subplots(figsize=(5, 5))
-    # import pdb; pdb.set_trace()
+
     plt.plot(df['Position'].values, df['smooth_damage'].values, linewidth=2)
     plt.plot(df['Position'].values, df['smooth_random'].values,
         linewidth=1, color='black', ls='--')
@@ -232,6 +232,16 @@ def plot_damage_nuc_linker(df, output):
     plt.vlines(273, ymin=0.002, ymax=0.003, linestyle='dashed', color='grey', linewidth=0.5)
     plt.vlines(127, ymin=0.002, ymax=0.003, linestyle='dashed', color='grey', linewidth=0.5)
     
+    ax.set_ylabel('Relative Probability')
+    
+    ax2 = ax.twinx()
+
+    color = 'tab:blue'
+    ax2.set_ylabel('Nucleosome Probability', color=color)
+    ax2.plot(nuc_signal['index'].values, nuc_signal[0].values, color='red')
+    ax2.tick_params(axis='y', labelcolor=color)
+    ax2.set_ylim(0, 2)
+
     fig.tight_layout()
     out_file = os.path.join(output, 'damage_nuc_linker.pdf')
     plt.savefig(out_file)
