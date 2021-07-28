@@ -134,21 +134,29 @@ def load_data(damage_path, nucleosome_info, base_study):
     if len(base_study) == 1:
         damage = damage[damage['SEQ'] == base_study]
     else:
-        damage['Motif'] = damage['mer'].apply(obtain_context, cent=base_study)
-        damage = damage[damage['Motif'] == base_study]
-        damage = damage.drop(['Motif'], axis=1)
+        damage['Motif_right'] = damage['mer'].apply(
+            obtain_context, cent=base_study, label='right')
+        damage['Motif_left'] = damage['mer'].apply(
+            obtain_context, cent=base_study, label='left')
+        damage = damage[(damage['Motif_right'] == base_study) | \
+            (damage['Motif_left'] == base_study)]
+        damage = damage.drop(['Motif_right', 'Motif_left'], axis=1)
 
     return damage, nucleosomes
 
 
-def obtain_context(df, cent):
+def obtain_context(df, cent, label):
 
     mid = int(np.floor(len(df) / 2))
 
     if len(cent) % 2 == 0:
         plus = int(len(cent) / 2)
-        less = int(len(cent) / 2 - 1)
-        return df[mid - less: mid + plus + 1]
+        if label == 'right':
+            less = int(len(cent) / 2 - 1)
+            return df[mid - less: mid + plus + 1]
+        else:
+            less = int(len(cent) / 2 )
+            return df[mid - less: mid + plus]
     
     else:
         plus = int(np.floor(len(cent) / 2))
