@@ -236,9 +236,9 @@ def plot_damage_nuc_linker(df, output, nuc_signal):
     
     ax2 = ax.twinx()
 
-    color = 'tab:blue'
+    color = 'red'
     ax2.set_ylabel('Nucleosome Probability', color=color)
-    ax2.plot(nuc_signal['index'].values, nuc_signal[0].values, color='red')
+    ax2.plot(nuc_signal['index'].values, nuc_signal[0].values, color='red', alpha=0.7)
     ax2.tick_params(axis='y', labelcolor=color)
     ax2.set_ylim(0, 2)
 
