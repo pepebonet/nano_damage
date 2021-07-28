@@ -202,6 +202,50 @@ def clean_overlaps(df):
     return df
 
 
+def get_signal_from_dict(nuc_dict, df):
+
+    signal = []
+    for i in range(400):
+        try: 
+            signal.append(nuc_dict[i] / len(df))
+        except:
+            if i > 127 or i < 274:
+                signal.append(1)
+            else:
+                signal.append(0)
+             
+    return pd.DataFrame(signal).reset_index()
+
+
+def get_nuc_signal(df):
+    df['Start_nuc'] = df['Nuc_center'] - 73
+    df['End_nuc'] = df['Nuc_center'] + 74
+
+    starts = df['Start'].values
+    starts_nuc = df['Start_nuc'].values
+    ends = df['End'].values
+    ends_nuc = df['End_nuc'].values
+    chrom = df['CHROM'].values
+
+    positions = []
+    for i in range(len(starts) - 1):
+        if i < len(starts) - 1:
+            if (ends_nuc[i] >= starts[i + 1]) and (chrom[i] == chrom[i + 1]):
+                for el in list(range(ends_nuc[i] - starts[i + 1])):
+                    positions.append(el)
+                
+            if i > 0:
+                if (starts_nuc[i] <= ends[i - 1]) and (chrom[i] == chrom[i - 1]):
+                    for el in list(range(400 - ends[i-1] + starts_nuc[i], 400)):
+                        positions.append(el)
+    
+    nuc_dict = dict(Counter(positions))
+
+    nuc_signal = get_signal_from_dict(nuc_dict, df)
+
+    return nuc_signal
+
+
 # ------------------------------------------------------------------------------
 # CLICK
 # ------------------------------------------------------------------------------
@@ -259,7 +303,10 @@ def main(damage, nucleosome_information, base_study, output):
         enrichment_df['Random Model'].values, 31, 3
     )
 
-    pl.plot_damage_nuc_linker(enrichment_df, output)
+    #get the nucleosome signal 
+    nuc_signal = get_nuc_signal(nucleosomes)
+
+    pl.plot_damage_nuc_linker(enrichment_df, output, nuc_signal)
     
 
 
