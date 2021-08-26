@@ -56,7 +56,6 @@ def get_non_overlapping_pos(df1, df2):
     return df.drop(['ID'], axis=1)
 
 
-
 def get_overlapping_pos(df1, df2):
     """ Get positions of damage overlapping
     Args:
@@ -68,7 +67,18 @@ def get_overlapping_pos(df1, df2):
     
     overlap = pd.merge(df1, df2, on='ID', how='inner')
 
-    if df1.shape[1] == 14:
+    return clean_overlap(overlap)
+
+
+def clean_overlap(overlap):
+    """ Get clean df for the output of overlap positions
+    Args:
+        overlap: dataset of overlap positions after merge
+    Returns:
+        df: dataset containing clean overlapping positions
+    """
+
+    if overlap.shape[1] == 27:
         df = overlap[overlap.columns[:7]]
         df.columns = names_all_2[:7]
     else:
@@ -81,7 +91,7 @@ def get_overlapping_pos(df1, df2):
     df['treated_freq'] = (overlap['treated_freq_x'] + \
         overlap['treated_freq_y']) / 2
 
-    if df1.shape[1] == 14:
+    if overlap.shape[1] == 27:
         df['diff'] = df['treated_freq'] - df['untreated_freq']
         df['group'] = overlap['group_x'].astype(str) + '/' + \
             overlap['group_y'].astype(str)
@@ -90,6 +100,14 @@ def get_overlapping_pos(df1, df2):
         df['motif'] = overlap['motif_x'] + '/' + overlap['motif_y']
 
     return df
+
+
+def save_output(df_final, output, data_one):
+
+    filename = data_one.rsplit('/', 1)[1]
+    out_file = os.path.join(output, filename)
+
+    df_final.to_csv(out_file, sep='\t', index=None, compression='gzip')
 
 
 @click.command(short_help='Script to merge datasets from experiment 2')
@@ -106,11 +124,8 @@ def main(data_one, data_two, output):
 
     df_final = pd.concat([df_non_overlap, df_overlap])
 
-    filename = data_one.rsplit('/', 1)[1]
-    out_file = os.path.join(output, filename)
-
-    df_final.to_csv(out_file, sep='\t', index=None, compression='gzip')
-
+    save_output(df_final, output, data_one)
+    
 
 if __name__ == '__main__':
     main()
