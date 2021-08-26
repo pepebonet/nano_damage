@@ -68,14 +68,26 @@ def get_overlapping_pos(df1, df2):
     
     overlap = pd.merge(df1, df2, on='ID', how='inner')
 
-    df = overlap[overlap.columns[:6]]
-    df.columns = names_all_1[:6]
+    if df1.shape[1] == 14:
+        df = overlap[overlap.columns[:7]]
+        df.columns = names_all_2[:7]
+    else:
+        df = overlap[overlap.columns[:6]]
+        df.columns = names_all_1[:6]
 
     df['untreated_freq'] = (overlap['untreated_freq_x'] + \
         overlap['untreated_freq_y']) / 2
     
     df['treated_freq'] = (overlap['treated_freq_x'] + \
         overlap['treated_freq_y']) / 2
+
+    if df1.shape[1] == 14:
+        df['diff'] = df['treated_freq'] - df['untreated_freq']
+        df['group'] = overlap['group_x'].astype(str) + '/' + \
+            overlap['group_y'].astype(str)
+        df['motif_1 DRWGGDD P-value'] = (overlap['motif_1 DRWGGDD P-value_x'] + \
+            overlap['motif_1 DRWGGDD P-value_y']) / 2
+        df['motif'] = overlap['motif_x'] + '/' + overlap['motif_y']
 
     return df
 
