@@ -1,5 +1,6 @@
 #!/usr/bin/envs/ python3
 
+import os
 import click
 import pandas as pd
 
@@ -36,6 +37,45 @@ def load_datasets(data_one, data_two):
     return df1, df2
 
 
+def get_non_overlapping_pos(df1, df2):
+    """ Get positions of damage not overlapping
+    Args:
+        df1: dataset of the first batch
+        df2: dataset of the second batch
+    Returns:
+        df: dataset containing non-overlapping positions
+    """
+
+    non_overlap = list(set(df1['ID'].tolist()) ^ set(df2['ID'].tolist()))
+
+    df1_non_overlap = df1[df1['ID'].isin(non_overlap)]
+    df2_non_overlap = df2[df2['ID'].isin(non_overlap)]
+
+    df = pd.concat([df1_non_overlap, df2_non_overlap])
+    import pdb;pdb.set_trace()
+    return df
+
+
+
+def get_overlapping_pos(df1, df2):
+    """ Get positions of damage overlapping
+    Args:
+        df1: dataset of the first batch
+        df2: dataset of the second batch
+    Returns:
+        df: dataset containing overlapping positions
+    """
+    
+    overlap = list(set(df2['ID'].tolist()).intersection(df1['ID'].tolist()))
+
+    df1_overlap = df1[df1['ID'].isin(overlap)]
+    df2_overlap = df2[df2['ID'].isin(overlap)]
+    import pdb;pdb.set_trace()
+
+    # return df
+
+
+
 @click.command(short_help='Script to merge datasets from experiment 2')
 @click.option('-do', '--data_one', required=True, help='first dataset to merge')
 @click.option('-dt', '--data_two', required=True, help='second dataset to merge')
@@ -43,10 +83,16 @@ def load_datasets(data_one, data_two):
 def main(data_one, data_two, output):
 
     df1, df2 = load_datasets(data_one, data_two)
+    import pdb;pdb.set_trace()
+    df_non_overlap = get_non_overlapping_pos(df1, df2)
 
-    
+    df_overlap = get_overlapping_pos(df1, df2)
+
+    df_final = pd.concat([df_non_overlap, df_overlap])
 
     import pdb;pdb.set_trace()
+
+    df_final.to_csv()
 
 
 if __name__ == '__main__':
