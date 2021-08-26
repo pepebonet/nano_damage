@@ -52,8 +52,8 @@ def get_non_overlapping_pos(df1, df2):
     df2_non_overlap = df2[df2['ID'].isin(non_overlap)]
 
     df = pd.concat([df1_non_overlap, df2_non_overlap])
-    import pdb;pdb.set_trace()
-    return df
+
+    return df.drop(['ID'], axis=1)
 
 
 
@@ -66,14 +66,18 @@ def get_overlapping_pos(df1, df2):
         df: dataset containing overlapping positions
     """
     
-    overlap = list(set(df2['ID'].tolist()).intersection(df1['ID'].tolist()))
+    overlap = pd.merge(df1, df2, on='ID', how='inner')
 
-    df1_overlap = df1[df1['ID'].isin(overlap)]
-    df2_overlap = df2[df2['ID'].isin(overlap)]
-    import pdb;pdb.set_trace()
+    df = overlap[overlap.columns[:6]]
+    df.columns = names_all_1[:6]
 
-    # return df
+    df['untreated_freq'] = (overlap['untreated_freq_x'] + \
+        overlap['untreated_freq_y']) / 2
+    
+    df['treated_freq'] = (overlap['treated_freq_x'] + \
+        overlap['treated_freq_y']) / 2
 
+    return df
 
 
 @click.command(short_help='Script to merge datasets from experiment 2')
@@ -83,16 +87,17 @@ def get_overlapping_pos(df1, df2):
 def main(data_one, data_two, output):
 
     df1, df2 = load_datasets(data_one, data_two)
-    import pdb;pdb.set_trace()
-    df_non_overlap = get_non_overlapping_pos(df1, df2)
 
+    df_non_overlap = get_non_overlapping_pos(df1, df2)
+    
     df_overlap = get_overlapping_pos(df1, df2)
 
     df_final = pd.concat([df_non_overlap, df_overlap])
 
-    import pdb;pdb.set_trace()
+    filename = data_one.rsplit('/', 1)[1]
+    out_file = os.path.join(output, filename)
 
-    df_final.to_csv()
+    df_final.to_csv(out_file, sep='\t', index=None, compression='gzip')
 
 
 if __name__ == '__main__':
