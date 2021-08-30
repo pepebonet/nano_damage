@@ -55,33 +55,6 @@ def annot(df):
     return seq_pos
 
 
-#Obtain number of nucleotides within each nucleosome position for normalization
-def obtain_nuc_norm(df):
-
-    seq = df.apply(annot, axis = 1)
-    #Init sequence to counts
-    seq2count = list(seq[0])
-
-    triplet_nuc = Counter(ut.chunks(seq[0], 3))
-
-    for i in range(1, len(seq)):
-        #Ignore any nucleosome at the end of the chromosome 
-        #Number of bases lower than 147 
-        if len(list(seq[i])) != 147:
-            continue
-        # add sequence of every nucleosome for each on of the 147 bases
-        seq2count = list(map(add, seq2count, seq[i]))
-        #Nucleosome triple context
-        triplet_nuc += Counter(ut.chunks(seq[i], 3))
-
-    norm = []
-    #Count nucleotides for each base in a nucleosome
-    for el in seq2count:
-        norm.append(Counter(list(el)))
-
-    return norm, triplet_nuc
-
-
 #Intersect damage and nucleosomes through bedtools
 def intersect(damage, nucleosomes):
     a = pybedtools.BedTool.from_dataframe(damage)
@@ -103,15 +76,6 @@ def intersect(damage, nucleosomes):
             'Val_1', 'Val_2', 'ID', 'Center_nuc', 'Overlapped'])
 
     return df
-
-
-#Per base enrichment
-def obtain_observed_damage(df_nuc):
-
-    import pdb;pdb.set_trace()
-    counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
-    import pdb; pdb.set_trace()
-    return df_nuc
 
 
 def load_data(damage_path, nucleosome_info, enrichment_path):
@@ -143,6 +107,25 @@ def load_data(damage_path, nucleosome_info, enrichment_path):
     return damage, nucleosomes, enrichment
 
 
+def obtain_observed_damage(df_nuc):
+    """ Get the observed damage per position 
+    Args:
+        df_nuc: dataframe of damage in the nucleosomes
+    Returns:
+        observed: observed damage per position in the nucleosomes
+    """
+    
+    counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
+
+    observed = pd.DataFrame.from_dict(
+        counts_position, orient='index').reset_index().sort_values(
+            by='index', ascending=True)
+    
+    observed.columns = [['Position', 'Observed_damage']]
+    
+    return observed
+
+
 def get_expected_damage(df, enrichment):
     """ Get expected damage based on trinucleotide context 
     Args:
@@ -165,7 +148,7 @@ def get_expected_damage(df, enrichment):
             seq = ut.comp_seq(seq)
         
         prob_nuc = []
-        #TODO <JB> review this bit of the normalization it is not working properly
+        #TODO <JB> review this bit of the normalization. It is not working properly
         for k in ut.slicing_window(seq, 3):
             try: 
                 prob_nuc.append(enrichment[k] * N)
@@ -174,10 +157,9 @@ def get_expected_damage(df, enrichment):
         
         prob_all_nuc.append(prob_nuc)
 
-    pos_expected_damage = sum([ sum(x) for x in zip(*prob_all_nuc) ])
+    expected = [sum(x) for x in zip(*prob_all_nuc)]
     
-    return pos_expected_damage
-
+    return expected
 
 
 # ------------------------------------------------------------------------------
@@ -204,11 +186,11 @@ def main(damage, nucleosome_information, enrichment_data, output):
     damage, nucleosomes, enrichment = load_data(
         damage, nucleosome_information, enrichment_data
     )
-    # import pdb;pdb.set_trace()
+    
     #obtain start and end positions
     damage = add_dam_se(damage)
     nucleosomes = add_nuc_se(nucleosomes)
-    # import pdb;pdb.set_trace()
+    
     #chr in int format for pybedtools
     damage_bed = chr2num(damage)
     nucleosomes_bed = chr2num(nucleosomes)
@@ -220,14 +202,19 @@ def main(damage, nucleosome_information, enrichment_data, output):
     df_nuc = df[df['Overlapped'] != 0]
     print(df_nuc.shape)
 
+    #Obtain observed damage in the nucleosomes
+    final_dam = obtain_observed_damage(df_nuc)
+    
     #compute expected damage (Needs revision)
     expected_damage = get_expected_damage(df_nuc, enrichment)
-    import pdb;pdb.set_trace()
-    #Obtain observed damage in the nucleosomes
-    observed_damage = obtain_observed_damage(df_nuc)
+    
+    final_dam['Expected_damage'] = expected_damage
 
-    # per_base_dir = os.path.join(output,'study_norm_all_bases')
-    # pl.plot_norm_nucleosomes(enrichment_df, per_base_dir, label='norm')
+    final_dam['Relative Increase'] = (final_dam['Observed_damage'].values - \
+        final_dam['Expected_damage'].values) / final_dam['Expected_damage'].values
+    
+    per_base_dir = os.path.join(output,'study_norm_all_bases')
+    pl.plot_norm_nucleosomes(final_dam, per_base_dir)
 
 
 if __name__ == '__main__':
