@@ -9,6 +9,7 @@ from operator import add
 from bgreference import refseq
 from collections import Counter
 
+from tqdm import tqdm
 import utils as ut
 import plots as pl
 
@@ -42,9 +43,15 @@ def chr2num(df):
     return df
 
 
+def num2chr(df):
+    df['CHROM'] = df.CHROM.apply(lambda x : ut.find_chr(x))
+    return df
+
+
 #Obtain base for the position in the file
 def annot(df):
-    seq_pos = refseq('saccer3', df['CHROM'], df['Start'], 147)
+    seq_pos = refseq('saccer3', df['CHROM'].unique()[0], 
+        df['Start_nuc'].unique()[0] - 1, 149)
     return seq_pos
 
 
@@ -86,66 +93,36 @@ def intersect(damage, nucleosomes):
             result.fn, sep='\t', names=['CHROM', 'Start', 'End', 'SEQ', 'strand', 
             'mer', 'min coverage', 'untreated_freq', 'treated_freq', 'group', 
             'motif_1 DRWGGDD P-value', 'motif', 'value', 'PENTAMER', 'TRIPLET', 
-            'Chr_nuc', 'Start_nuc', 'End_nuc', 'Val_1', 'Val_2', 'Center_nuc', 
+            'Chr_nuc', 'Start_nuc', 'End_nuc', 'Val_1', 'Val_2', 'ID', 'Center_nuc', 
             'Overlapped'])
     else: 
         df = pd.read_csv(
             result.fn, sep='\t', names=['CHROM', 'Start', 'End', 'SEQ', 'strand', 
             'mer', 'min coverage', 'untreated_freq', 'treated_freq', 'value', 
             'PENTAMER', 'TRIPLET', 'Chr_nuc', 'Start_nuc', 'End_nuc',
-            'Val_1', 'Val_2', 'Center_nuc', 'Overlapped'])
+            'Val_1', 'Val_2', 'ID', 'Center_nuc', 'Overlapped'])
 
     return df
 
 
 #Per base enrichment
-def obtain_per_base_enrichment(df_nuc, norm, base):
-    d = {}
-    #Add the nucleosome postion of the damage
-    #TODO <JB> Fix a possible problem with the strand 
-    # neg = df_nuc[df_nuc['strand'] == '-']
-    # counts_neg = Counter(neg['End_nuc'] - neg['Start'])
-    # pos = df_nuc[df_nuc['strand'] == '+']
-    # counts_pos = Counter(pos['End'] - pos['Start_nuc'])
-    # counts_position = counts_pos + counts_neg
+def obtain_observed_damage(df_nuc):
+
     import pdb;pdb.set_trace()
     counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
-    for k, v in counts_position.items():
-        d.update({k - 1 : v})
-    import pdb;pdb.set_trace()
-    df = pd.DataFrame(d.items(), columns=['POSITION', 'NORM'])
-    df['NORM_2'] = df['NORM'] / df['NORM'].sum()
-    df.sort_values(by=['POSITION'], inplace=True)
-
-    return df.reset_index(drop=True)
+    import pdb; pdb.set_trace()
+    return df_nuc
 
 
-#Triplet enrichment within the nucleosomes
-def obtain_nucleosome_enrichment(df, triplet_norm, out_dir):
-    triplet_exp = ut.get_context_counts(df, 'TRIPLET')
-    
-    results = ut.get_context_norm(triplet_norm, triplet_exp)
+def load_data(damage_path, nucleosome_info, enrichment_path):
+    """ Load datasets for further analysis 
+    Args:
+        damage_path: path to damage dataset
+        nucleosome_info: path to nucleosome information
+    Returns:
+        damage, nucleosomes: both datasets
+    """
 
-    triplet_dir = os.path.join(out_dir, 'triplet_norm_nuc')
-    pl.obtain_plots(results, triplet_dir, 'triplet', 16)
-
-
-#Employ EWA to smooth a function. Related to AdamOptimzer of AI. 
-def exp_weighted_averages(df):
-
-    for el in ['NORM_2', 'Random Model']:
-        to_s = df[el].tolist()
-        B = 0.8; V = [to_s[0] - to_s[0] * (1 - B)]
-        for i in range(len(to_s)):
-            V.append(B * V[i] + (1 - B) * to_s[i])
-
-        name = '{}_smooth'.format(el)
-        df[name] = V[1:]
-
-    return df
-
-
-def load_data(damage_path, nucleosome_info, base_study):
     damage = pd.read_csv(damage_path, sep='\t')
     if 'diff' in damage:
         damage = damage.drop(columns=['diff'])
@@ -154,51 +131,53 @@ def load_data(damage_path, nucleosome_info, base_study):
         nucleosome_info, sep='\t', #header=None,
     )
     nucleosomes.columns = ["CHROM", "Start", "End", "Val_1", "Val_2"]
+    nucleosomes['ID'] = range(len(nucleosomes))
     
-    #Filter data for only the target nucleotide
+    #Clean-up damage data
     if 'index' in damage.columns: 
         damage = damage.drop('index', axis=1)
     damage = damage.rename(columns={"chrom": "CHROM", "base": "SEQ"})
-    
-    # if len(base_study) == 1:
-    #     damage = damage[damage['SEQ'] == base_study]
-    # else:
-    #     damage['Motif'] = damage['mer'].apply(obtain_context, cent=base_study)
-    #     damage = damage[damage['Motif'] == base_study]
-    #     damage = damage.drop(['Motif'], axis=1)
 
-    # print('Initializing the analysis on nucleotide: {}'.format(base_study))
+    enrichment = pd.read_csv(enrichment_path, sep='\t')
 
-    return damage, nucleosomes
+    return damage, nucleosomes, enrichment
 
 
-def obtain_context(df, cent):
+def get_expected_damage(df, enrichment):
+    """ Get expected damage based on trinucleotide context 
+    Args:
+        df: dataframe with damage in nucleosomes
+        enrichment: dataframe containing the triple enrichment probabilities
+    Returns:
+        expected: expected damage per position in the nucleosome
+    """
 
-    mid = int(np.floor(len(df) / 2))
+    enrichment = enrichment.set_index('CONTEXT').to_dict()['TOTAL_NORM']
 
-    if len(cent) % 2 == 0:
-        plus = int(len(cent) / 2)
-        less = int(len(cent) / 2 - 1)
-        return df[mid - less: mid + plus + 1]
-    
-    else:
-        plus = int(np.floor(len(cent) / 2))
-        less = int(np.floor(len(cent) / 2))
-        return df[mid - less: mid + plus + 1]
+    df = num2chr(df)
+    prob_all_nuc = []
+
+    for i, j in tqdm(df.groupby(['ID', 'strand'])):
+        N = j.shape[0]
+        seq = annot(j)
+
+        if j['strand'].unique()[0] == '-':
+            seq = ut.comp_seq(seq)
         
+        prob_nuc = []
+        #TODO <JB> review this bit of the normalization it is not working properly
+        for k in ut.slicing_window(seq, 3):
+            try: 
+                prob_nuc.append(enrichment[k] * N)
+            except:
+                prob_nuc.append(0)
+        
+        prob_all_nuc.append(prob_nuc)
 
-
-def get_random_damage(norms, base):
-
-    tot_bases = 0
-    for el in norms: 
-        tot_bases += el[base[int(np.floor(len(base) / 2))]]
-
-    random_damage = [i[base[int(np.floor(len(base) / 2))]] / \
-        tot_bases for i in norms]
-
-    return random_damage
+    pos_expected_damage = sum([ sum(x) for x in zip(*prob_all_nuc) ])
     
+    return pos_expected_damage
+
 
 
 # ------------------------------------------------------------------------------
@@ -214,25 +193,22 @@ def get_random_damage(norms, base):
     help='nucleosome informationd bases'
 )
 @click.option(
-    '-bs', '--base_study', default='G', help='damaged bases'
+    '-ed', '--enrichment_data', default='', help='data containing \
+        enrichment probabilities normalized to one'
 )
 @click.option(
     '-o', '--output', default='', help='output folder'
 )
-def main(damage, nucleosome_information, base_study, output):
+def main(damage, nucleosome_information, enrichment_data, output):
     #Obtain data
-    damage, nucleosomes = load_data(damage, nucleosome_information, base_study)
-    
+    damage, nucleosomes, enrichment = load_data(
+        damage, nucleosome_information, enrichment_data
+    )
+    # import pdb;pdb.set_trace()
     #obtain start and end positions
     damage = add_dam_se(damage)
     nucleosomes = add_nuc_se(nucleosomes)
-
-    #obtain norm nucleotide counts
-    norms, triplet_norm = obtain_nuc_norm(nucleosomes)
-
-    #obtain random model of damage
-    random_model = get_random_damage(norms, base_study)
-
+    # import pdb;pdb.set_trace()
     #chr in int format for pybedtools
     damage_bed = chr2num(damage)
     nucleosomes_bed = chr2num(nucleosomes)
@@ -243,28 +219,15 @@ def main(damage, nucleosome_information, base_study, output):
     #Select only damage in the nucleosome regions
     df_nuc = df[df['Overlapped'] != 0]
     print(df_nuc.shape)
-    #Nucleosome enrichment as enrichment.py
-    obtain_nucleosome_enrichment(df_nuc, triplet_norm, output)
 
-    #obtain per-base enrichment within the nucleosome
-    enrichment_df = obtain_per_base_enrichment(df_nuc, norms, base_study)
-    
-    #add random model to the enrichment. Be careful with dimensions here 
-    enrichment_df['Random Model'] = random_model
-       
-    #Exponentially weighted averages for smoothing
-    enrichment_df_smooth = exp_weighted_averages(enrichment_df)
+    #compute expected damage (Needs revision)
+    expected_damage = get_expected_damage(df_nuc, enrichment)
+    import pdb;pdb.set_trace()
+    #Obtain observed damage in the nucleosomes
+    observed_damage = obtain_observed_damage(df_nuc)
 
-    per_base_dir = os.path.join(
-        output,'study_smooth_no_norm_all_bases'
-    )
-    
-    pl.plot_per_base_enrichment(enrichment_df_smooth, per_base_dir, label='smooth')
-
-    per_base_dir = os.path.join(
-        output,'study_no_norm_all_bases'
-    )
-    pl.plot_per_base_enrichment(enrichment_df, per_base_dir, label='norm')
+    # per_base_dir = os.path.join(output,'study_norm_all_bases')
+    # pl.plot_norm_nucleosomes(enrichment_df, per_base_dir, label='norm')
 
 
 if __name__ == '__main__':
