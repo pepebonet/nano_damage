@@ -221,6 +221,69 @@ def plot_per_base_enrichment(df, outdir, label):
     plt.close()
 
 
+def plot_norm_nucleosomes(df, outdir):
+    # import pdb;pdb.set_trace()
+    x = df['Position'].values.flatten()
+
+    yhat = df['Relative Increase'].values.flatten()
+    yhat = savgol_filter(yhat, 9, 3)
+    
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(20, 5),
+                            gridspec_kw={'height_ratios': [30, 1]})
+
+    #1st axis. Lower color plot
+
+    aa = [el * 146 / 23 for el in list(range(23))]
+    for ix, j in enumerate(aa):
+        if ix in [10, 11, 12]:
+                color = 'white'
+        else:
+            if ix % 2 == 0:
+                color = '#006400'
+            else:
+                color = '#FFB90F'
+        
+        axs[1].barh(1, aa[1], left=j, color=color)
+        
+
+    axs[1].set_xlim(-1, 148)
+    axs[1].spines['top'].set_visible(False)
+    axs[1].spines['bottom'].set_visible(False)
+    axs[1].spines['left'].set_visible(False)
+    axs[1].spines['right'].set_visible(False)
+
+    axs[1].get_yaxis().set_visible(False)
+    axs[1].get_xaxis().set_visible(False)
+
+    #2nd axis. Plot
+    plt.sca(axs[0])
+    axs[0].plot(x, yhat, linewidth=4)
+
+    # axs.set_xticks(order_plot)
+    axs[0].set_ylabel('Relative Probability',fontsize=24)
+    axs[0].spines['top'].set_visible(False)
+    axs[0].spines['right'].set_visible(False)
+    axs[0].set_xlim(-1, 148)
+    plt.setp([axs[0].get_xticklines(), axs[0].get_yticklines()], color='grey')
+
+    axs[0].xaxis.set_ticks_position('none')
+    for axis in ['top', 'bottom', 'left', 'right']:
+        axs[0].spines[axis].set_linewidth(0.2)
+
+    axs[0].xaxis.set_tick_params(pad=0.5)
+    axs[0].yaxis.set_tick_params(pad=0.5, width=0.5)
+
+    plt.xticks(fontsize=20, rotation=90)
+    plt.yticks(fontsize=16)
+    plt.tick_params(axis='both', which='both', bottom=False, left = False)
+    axs[1].set_xlabel('Position', fontsize=24)
+
+    fig.tight_layout()
+
+    plt.savefig(outdir)
+    plt.close()
+
+
 def plot_damage_nuc_linker(df, output, nuc_signal):
     fig, ax = plt.subplots(figsize=(5, 5))
 
