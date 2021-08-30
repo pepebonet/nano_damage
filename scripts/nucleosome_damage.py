@@ -159,7 +159,7 @@ def load_data(damage_path, nucleosome_info, base_study):
     if 'index' in damage.columns: 
         damage = damage.drop('index', axis=1)
     damage = damage.rename(columns={"chrom": "CHROM", "base": "SEQ"})
-
+    import pdb;pdb.set_trace()
     if len(base_study) == 1:
         damage = damage[damage['SEQ'] == base_study]
     else:
@@ -222,7 +222,7 @@ def get_random_damage(norms, base):
 def main(damage, nucleosome_information, base_study, output):
     #Obtain data
     damage, nucleosomes = load_data(damage, nucleosome_information, base_study)
-
+    import pdb;pdb.set_trace()
     #obtain start and end positions
     damage = add_dam_se(damage)
     nucleosomes = add_nuc_se(nucleosomes)
@@ -248,7 +248,7 @@ def main(damage, nucleosome_information, base_study, output):
 
     #obtain per-base enrichment within the nucleosome
     enrichment_df = obtain_per_base_enrichment(df_nuc, norms, base_study)
-
+    import pdb;pdb.set_trace()
     #add random model to the enrichment. Be careful with dimensions here 
     enrichment_df['Random Model'] = random_model
        

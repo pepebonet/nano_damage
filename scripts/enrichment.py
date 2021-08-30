@@ -102,16 +102,16 @@ def generate_plots(df_t, df_p, td, pd, out_dir):
 @click.option('-o', '--output', required=True)
 def main(data, chrom_len, output):
     df = pd.read_csv(data, sep='\t', compression='gzip')
-
+    
     try:
         df.columns = names_all_1
     except:
         df.columns = names_all_2
-
+    
     #optional to take only those where the treated has higher frequency
     df['value'] = df['treated_freq'] - df['untreated_freq']
     df = df[df['value'] > 0]
-
+    
     chrom_lens = pd.read_csv(
         chrom_len, sep='\t', names=['CHROM', 'LEN']
     )
@@ -120,7 +120,7 @@ def main(data, chrom_len, output):
 
     triplet_dir = os.path.join(output, 'triplet')
     penta_dir = os.path.join(output, 'pentamer')
-
+    
     generate_plots(
         triplet_context, penta_context, triplet_dir, 
         penta_dir, output
