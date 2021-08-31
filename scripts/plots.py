@@ -260,7 +260,7 @@ def plot_norm_nucleosomes(df, outdir):
     axs[0].plot(x, yhat, linewidth=4)
 
     # axs.set_xticks(order_plot)
-    axs[0].set_ylabel('Relative Probability',fontsize=24)
+    axs[0].set_ylabel('Relative Increase',fontsize=24)
     axs[0].spines['top'].set_visible(False)
     axs[0].spines['right'].set_visible(False)
     axs[0].set_xlim(-1, 148)
