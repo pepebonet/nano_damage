@@ -226,7 +226,7 @@ def plot_norm_nucleosomes(df, outdir):
     x = df['Position'].values.flatten()
 
     yhat = df['Relative Increase'].values.flatten()
-    yhat = savgol_filter(yhat, 9, 3)
+    yhat = savgol_filter(yhat, 11, 3)
     
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(20, 5),
                             gridspec_kw={'height_ratios': [30, 1]})
@@ -264,6 +264,7 @@ def plot_norm_nucleosomes(df, outdir):
     axs[0].spines['top'].set_visible(False)
     axs[0].spines['right'].set_visible(False)
     axs[0].set_xlim(-1, 148)
+    axs[0].set_ylim(-0.3, 0.3)
     plt.setp([axs[0].get_xticklines(), axs[0].get_yticklines()], color='grey')
 
     axs[0].xaxis.set_ticks_position('none')
