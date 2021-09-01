@@ -162,6 +162,25 @@ def get_expected_damage(df, enrichment):
     return expected
 
 
+def arrange_df_and_save(final_dam, expected_damage, output):
+    """ Get final df and save to tsv 
+    Args:
+        final_dam: dataframe containing the observed damage
+        expected_damage: list of expected damage per nucleosome site
+    Returns:
+        final_dam: final damage df containing relative increase of damage
+    """
+
+    final_dam['Expected_damage'] = expected_damage
+
+    final_dam['Relative Increase'] = (final_dam['Observed_damage'].values - \
+        final_dam['Expected_damage'].values) / final_dam['Expected_damage'].values
+    
+    out_file = os.path.join(output, 'exp_obs_relinc.tsv')
+    final_dam.to_csv(out_file, sep='\t', index=None)
+
+    return final_dam
+
 # ------------------------------------------------------------------------------
 # CLICK
 # ------------------------------------------------------------------------------
@@ -208,11 +227,10 @@ def main(damage, nucleosome_information, enrichment_data, output):
     #compute expected damage (Needs revision)
     expected_damage = get_expected_damage(df_nuc, enrichment)
     
-    final_dam['Expected_damage'] = expected_damage
-
-    final_dam['Relative Increase'] = (final_dam['Observed_damage'].values - \
-        final_dam['Expected_damage'].values) / final_dam['Expected_damage'].values
+    #save damage dataframe
+    final_dam = arrange_df_and_save(final_dam, expected_damage, output)
     
+    #plot relative damage increase in the nucleosome
     per_base_dir = os.path.join(output,'study_norm_all_bases')
     pl.plot_norm_nucleosomes(final_dam, per_base_dir)
 
