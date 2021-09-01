@@ -117,11 +117,9 @@ def obtain_observed_damage(df_nuc):
     
     counts_position = Counter(df_nuc['End'] - df_nuc['Start_nuc'])
 
-    observed = pd.DataFrame.from_dict(
-        counts_position, orient='index').reset_index().sort_values(
-            by='index', ascending=True)
-    
-    observed.columns = [['Position', 'Observed_damage']]
+    observed = pd.DataFrame(
+        counts_position.items(), columns=['Position', 'Observed_damage']
+    ).sort_values(by='Position', ascending=True)
     
     return observed
 
@@ -170,8 +168,10 @@ def arrange_df_and_save(final_dam, expected_damage, output):
     Returns:
         final_dam: final damage df containing relative increase of damage
     """
-
-    final_dam['Expected_damage'] = expected_damage
+    exp = pd.DataFrame(expected_damage).reset_index()
+    exp['index'] = exp['index'] + 1
+    exp = exp.rename(columns={'index': 'Position', 0: 'Expected_damage'})
+    final_dam = final_dam.merge(exp, on='Position')
 
     final_dam['Relative Increase'] = (final_dam['Observed_damage'].values - \
         final_dam['Expected_damage'].values) / final_dam['Expected_damage'].values
@@ -220,6 +220,9 @@ def main(damage, nucleosome_information, enrichment_data, output):
     #Select only damage in the nucleosome regions
     df_nuc = df[df['Overlapped'] != 0]
     print(df_nuc.shape)
+
+    out_nuc_dam = os.path.join(output, 'damage_in_nucleosomes.tsv')
+    df_nuc.to_csv(out_nuc_dam, sep='\t', index=None)
 
     #Obtain observed damage in the nucleosomes
     final_dam = obtain_observed_damage(df_nuc)
