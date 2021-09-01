@@ -148,15 +148,15 @@ def get_expected_damage(df, enrichment):
             seq = ut.comp_seq(seq)
         
         prob_nuc = []
-        #TODO <JB> review this bit of the normalization. It is not working properly
+
         for k in ut.slicing_window(seq, 3):
             try: 
                 prob_nuc.append(enrichment[k])
             except:
                 prob_nuc.append(0)
-
-        prob_all_nuc.append(prob_nuc)
-
+        prob_nuc_norm = [x / sum(prob_nuc) * N for x in prob_nuc]
+        prob_all_nuc.append(prob_nuc_norm)
+    
     expected = [sum(x) for x in zip(*prob_all_nuc)]
     
     return expected
