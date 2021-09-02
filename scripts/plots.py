@@ -285,6 +285,46 @@ def plot_norm_nucleosomes(df, outdir):
     plt.close()
 
 
+def plot_zoom_out_nucleosomes(df, outdir):
+    # import pdb;pdb.set_trace()
+    x = df['Position'].values.flatten()
+
+    yhat = df['Relative Increase'].values.flatten()
+    yhat = savgol_filter(yhat, 21, 3)
+    
+    fig, ax = plt.subplots(figsize=(6, 5))
+
+    ax.plot(x, yhat, linewidth=2, alpha=0.9)
+
+    ax.set_ylabel('Relative Increase',fontsize=14)
+    ax.set_xlabel('Position',fontsize=14)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    ax.vlines(0, ymin=-0.2, ymax=0.2, linestyle='dashed', color='grey', linewidth=1)
+    ax.vlines(73, ymin=-0.2, ymax=0.2, linestyle='dashed', color='grey', linewidth=1)
+    ax.vlines(-73, ymin=-0.2, ymax=0.2, linestyle='dashed', color='grey', linewidth=1)
+
+    plt.setp([ax.get_xticklines(), ax.get_yticklines()], color='grey')
+
+    ax.xaxis.set_ticks_position('none')
+    for axis in ['top', 'bottom', 'left', 'right']:
+        ax.spines[axis].set_linewidth(0.2)
+
+    ax.xaxis.set_tick_params(pad=0.5)
+    ax.yaxis.set_tick_params(pad=0.5, width=0.5)
+
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.tick_params(axis='both', which='both', bottom=False, left = False)
+
+    fig.tight_layout()
+
+    plt.savefig(outdir)
+    plt.close()
+
+
+
 def plot_damage_nuc_linker(df, output, nuc_signal):
     fig, ax = plt.subplots(figsize=(5, 5))
 
