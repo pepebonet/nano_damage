@@ -2,3 +2,4 @@ outputs/*
 *png
 scripts/__pycache__
 access_token/*
+*tsv
