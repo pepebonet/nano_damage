@@ -126,7 +126,7 @@ def do_randomizations(probs, N_damage):
     """
 
     expecteds = []; 
-    for i in tqdm(range(50)):
+    for i in tqdm(range(10)):
         randoms = np.zeros([len(probs), 147])
         for j in range(len(probs)):
             random_draws = np.random.choice(range(147), N_damage[j], p=probs[j])
@@ -136,6 +136,22 @@ def do_randomizations(probs, N_damage):
         expecteds.append(sum(randoms))    
 
     return expecteds
+
+
+def get_rel_increase(mean_expected, randoms_expected):
+    """ Get relative increase of the randoms against the mean expected
+    Args:
+        mean_expected: normalized probabilities for every  
+        randoms_expected: 1000 randomizations of damage
+    Returns:
+        rel_increases: relative increases for every randomization
+    """
+
+    rel_increases = []
+    for el in randoms_expected:
+        rel_increases.append((el - mean_expected) / mean_expected)
+    
+    return rel_increases
 
 
 # ------------------------------------------------------------------------------
@@ -166,6 +182,12 @@ def main(damage_nucleosomes, enrichment_data, output):
 
     rel_increases = get_rel_increase(mean_expected, randoms_expected)
     import pdb;pdb.set_trace()
+
+    #TODO <JB> 
+    #   1.- Compute the SNR for every relative increase randomization
+    #   2.- Get distribution of SNR and plot it
+    #   3.- Get the empiric p-value for the SNR of the observed damage
+
 
 if __name__ == '__main__':
     main()
