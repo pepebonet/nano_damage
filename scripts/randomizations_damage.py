@@ -111,7 +111,6 @@ def get_expected_damage(df, enrichment):
         prob_all_nuc_mean.append(prob_nuc_norm_mean)
     
     mean_expected = [sum(x) for x in zip(*prob_all_nuc_mean)]
-    import pdb;pdb.set_trace()
     randoms_expected = do_randomizations(prob_all_nuc, N_damage)
 
     return mean_expected, randoms_expected
@@ -127,7 +126,7 @@ def do_randomizations(probs, N_damage):
     """
 
     expecteds = []; 
-    for i in tqdm(range(1000)):
+    for i in tqdm(range(50)):
         randoms = np.zeros([len(probs), 147])
         for j in range(len(probs)):
             random_draws = np.random.choice(range(147), N_damage[j], p=probs[j])
@@ -163,8 +162,9 @@ def main(damage_nucleosomes, enrichment_data, output):
     final_dam = obtain_observed_damage(dam_nuc)
 
     #compute expected damage (Needs revision)
-    expected_damage = get_expected_damage(dam_nuc, enrichment)
+    mean_expected, randoms_expected = get_expected_damage(dam_nuc, enrichment)
 
+    rel_increases = get_rel_increase(mean_expected, randoms_expected)
     import pdb;pdb.set_trace()
 
 if __name__ == '__main__':
