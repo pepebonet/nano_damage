@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import click
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from bgreference import refseq
@@ -54,7 +55,7 @@ def get_info_damage(df):
     Returns:
         sequences: sequence of every nucleosome
         strand: strand of the sequence
-        N_damage: amount of the damage in that sequence
+        N_damage: c
     """
 
     df = ndn.num2chr(df)
@@ -81,15 +82,15 @@ def get_expected_damage(df, enrichment):
         df: dataframe with damage in nucleosomes
         enrichment: dataframe containing the triple enrichment probabilities
     Returns:
-        expected: expected damage per position in the nucleosome
+        mean_expected: mean expected damage per position in the nucleosome
+        randoms_expected: randomizations of damage per position in the nucleosome
     """
 
     enrichment = enrichment.set_index('CONTEXT').to_dict()['TOTAL_NORM']
-    prob_all_nuc = []
+    prob_all_nuc = []; prob_all_nuc_mean = []
 
     sequences, strand, N_damage = get_info_damage(df)
 
-    import pdb;pdb.set_trace()
     for i, seq in tqdm(enumerate(sequences.tolist())):
 
         if  strand[i] == '-':
@@ -102,10 +103,41 @@ def get_expected_damage(df, enrichment):
                 prob_nuc.append(enrichment[k])
             except:
                 prob_nuc.append(0)
+
         prob_nuc_norm = [x / sum(prob_nuc) for x in prob_nuc]
+        prob_nuc_norm_mean = [x / sum(prob_nuc) * N_damage[i] for x in prob_nuc]
+
         prob_all_nuc.append(prob_nuc_norm)
-    import pdb;pdb.set_trace()
+        prob_all_nuc_mean.append(prob_nuc_norm_mean)
     
+    mean_expected = [sum(x) for x in zip(*prob_all_nuc_mean)]
+    import pdb;pdb.set_trace()
+    randoms_expected = do_randomizations(prob_all_nuc, N_damage)
+
+    return mean_expected, randoms_expected
+
+
+def do_randomizations(probs, N_damage):
+    """ Get randomizations of expected damage
+    Args:
+        probs: normalized probabilities for every  
+        N_damage: amount of the damage for every sequence
+    Returns:
+        randoms: 1000 randomizations of expected damage
+    """
+
+    expecteds = []; 
+    for i in tqdm(range(1000)):
+        randoms = np.zeros([len(probs), 147])
+        for j in range(len(probs)):
+            random_draws = np.random.choice(range(147), N_damage[j], p=probs[j])
+            for el in random_draws: 
+                randoms[j, el] += 1
+
+        expecteds.append(sum(randoms))    
+
+    return expecteds
+
 
 # ------------------------------------------------------------------------------
 # CLICK
