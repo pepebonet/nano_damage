@@ -83,8 +83,9 @@ def load_data(damage_path, nucleosome_info, enrichment_path):
     Args:
         damage_path: path to damage dataset
         nucleosome_info: path to nucleosome information
+        enrichment_path: data of the sequence context probability 
     Returns:
-        damage, nucleosomes: both datasets
+        damage, nucleosomes, enrichment: datasets
     """
 
     damage = pd.read_csv(damage_path, sep='\t')
