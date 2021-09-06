@@ -9,7 +9,7 @@ import gzip
 from tqdm import tqdm
 from functools import partial, reduce
 from multiprocessing import Pool
-from non_linear import create_quadratic_model, NonLinearFitting
+from miscellaneous.non_linear import create_quadratic_model, NonLinearFitting
 
 
 """ Utils """
