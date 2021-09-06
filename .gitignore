@@ -3,3 +3,4 @@ outputs/*
 scripts/__pycache__
 access_token/*
 *tsv
+*pdf
