@@ -10,6 +10,7 @@ import utils as ut
 import plots as pl
 import nucleosome_damage_norm as ndn
 import miscellaneous.new_spectral as ns
+import miscellaneous.plots_periodicity as pp
 
 
 def load_data(damage_nucleosomes, enrichment_path):
@@ -128,11 +129,11 @@ def do_randomizations(probs, N_damage):
     """
 
     expecteds = []; 
-    for i in tqdm(range(100)):
+    for i in tqdm(range(1000)):
         randoms = np.zeros([len(probs), 147])
         for j in range(len(probs)):
             random_draws = np.random.choice(
-                range(147), N_damage[j], p=probs[j], replace=False
+                range(147), N_damage[j], p=probs[j], replace=True
             )
             for el in random_draws: 
                 randoms[j, el] += 1
@@ -158,10 +159,11 @@ def get_rel_increase(mean_expected, randoms_expected):
     return rel_increases
 
 
-def compute_snr(rel_increase):
+def compute_snr(rel_increase, peak_obs):
     """ Get relative increase of the randoms against the mean expected
     Args:
         rel_increase: relative increases for every randomization
+        preak_obs: peak from the observed data 
     Returns:
         peaks: peak of periodicity
         snrs: signal to noise ratio calculated
@@ -171,7 +173,8 @@ def compute_snr(rel_increase):
 
     for signal in tqdm(rel_increase):
         x, y, snr, peak = ns.compute_spectrum(
-            signal, norm=True, low_p=5, high_p=15, low_t=0, high_t=len(signal)-2
+            signal, norm=True, low_p=5, high_p=15, low_t=0, high_t=len(signal)-2,
+            center=peak_obs
         )
         peaks.append(peak); snrs.append(snr)
     
@@ -195,11 +198,13 @@ def get_snr_observed(obs, exp):
     rel_inc = (obs['Observed_damage'].values - \
         obs['Expected_damage'].values) / obs['Expected_damage'].values
 
-    _, _, snr, peak = ns.compute_spectrum(
+    obs['rel_inc'] = rel_inc
+
+    x, y, snr, peak = ns.compute_spectrum(
         rel_inc, norm=True, low_p=5, high_p=15, low_t=0, high_t=len(rel_inc)-2
     )
-
-    return peak, snr
+    
+    return obs, peak, snr, x, y
 
 
 # ------------------------------------------------------------------------------
@@ -230,9 +235,9 @@ def main(damage_nucleosomes, enrichment_data, output):
 
     rel_increases = get_rel_increase(mean_expected, randoms_expected)
 
-    peak_obs, snr_obs = get_snr_observed(final_dam, mean_expected)
+    rel_inc_obs, peak_obs, snr_obs, x, y = get_snr_observed(final_dam, mean_expected)
 
-    peaks, snrs = compute_snr(rel_increases)
+    peaks, snrs = compute_snr(rel_increases, peak_obs)
 
     #TODO <JB> Maybe remove
     pl.plot_peaks(peaks, peak_obs, output)
@@ -240,6 +245,13 @@ def main(damage_nucleosomes, enrichment_data, output):
 
     p_val = (len(np.argwhere(np.asarray(snrs) > snr_obs)) + 1) / (len(snrs) + 1)
     print(p_val)
+
+    pp.plot(rel_inc_obs, x, y, snr_obs, peak_obs, p_val, output)
+
+    #TODO <JB> 
+    #   1.- Write information for functions properly
+    #   2.- Try to expand width of plots to 147 
+    #   3.- Extract damage at minor-in/out 
     
 
 if __name__ == '__main__':
