@@ -3,8 +3,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-from nucperiod.positions import MINORS_IN, MINORS_OUT, DYAD_X_SMALL
-
+import miscellaneous.positions as po
 
 def config_params(font_size=7):
     mpl.rcParams.update(mpl.rcParamsDefault)
@@ -47,13 +46,13 @@ def wave_painting_zoomin(xvals, yvals, axs, color_in, color_out, color_other, li
         for x in xvals_small:
 
             matched_color = 0
-            for (s, e) in MINORS_OUT:
+            for (s, e) in po.MINORS_OUT:
                 if s <= x < e:
                     colors.append(color_out)
                     matched_color = 1
                     break
             if matched_color == 0:
-                for (s, e) in MINORS_IN:
+                for (s, e) in po.MINORS_IN:
                     if s <= x < e:
                         colors.append(color_in)
                         matched_color = 1
@@ -122,7 +121,7 @@ def rectangles_drawing(axs, half_win, color1, color2):
     ax2 = axs.twinx()
     ax2.set_xticks(axs.get_xticks())
 
-    for xv in DYAD_X_SMALL:
+    for xv in po.DYAD_X_SMALL:
 
         ax2.add_patch(plt.Rectangle((xv - 2.575, -0.105), 5.15, 0.06, color=color1,
                                     clip_on=False, linewidth=0))

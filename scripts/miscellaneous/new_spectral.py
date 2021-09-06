@@ -153,7 +153,7 @@ def compute_signal_to_noise(x, y, center=None):
         peak = center
     
     for i, v in enumerate(x):
-        if peak - 0.5 <= v <= peak + 0.5:
+        if peak - 0.25 <= v <= peak + 0.25:
             x_i.append(x[i])
             y_i.append(y[i])
         else:

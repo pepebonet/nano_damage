@@ -32,7 +32,6 @@ def interval_minors():
 
     return minors_in, minors_out
 
-import pdb;pdb.set_trace()
 MINORS_IN, MINORS_OUT = interval_minors()
 
 
