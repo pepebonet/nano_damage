@@ -353,10 +353,14 @@ def plot_damage_nuc_linker(df, output, nuc_signal):
 
 
 
-def plot_snrs(snrs, output):
+def plot_snrs(snrs, snr_obs, output):
     fig, ax = plt.subplots(figsize=(5, 5))
 
     sns.displot(snrs, kind="kde")
+
+    plt.vlines(
+        snr_obs, ymin=0, ymax=0.2, linestyle='dashed', color='red', linewidth=0.5
+    )
 
     fig.tight_layout()
     out_file = os.path.join(output, 'snrs_distribution.pdf')
@@ -364,10 +368,14 @@ def plot_snrs(snrs, output):
     plt.close()
 
 
-def plot_peaks(peaks, output):
+def plot_peaks(peaks, peak_obs, output):
     fig, ax = plt.subplots(figsize=(5, 5))
 
     sns.displot(peaks, kind="kde")
+
+    plt.vlines(
+        peak_obs, ymin=0, ymax=0.2, linestyle='dashed', color='red', linewidth=0.5
+    )
 
     fig.tight_layout()
     out_file = os.path.join(output, 'peaks_distribution.pdf')
