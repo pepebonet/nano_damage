@@ -350,3 +350,26 @@ def plot_damage_nuc_linker(df, output, nuc_signal):
     out_file = os.path.join(output, 'damage_nuc_linker.pdf')
     plt.savefig(out_file)
     plt.close()
+
+
+
+def plot_snrs(snrs, output):
+    fig, ax = plt.subplots(figsize=(5, 5))
+
+    sns.displot(snrs, kind="kde")
+
+    fig.tight_layout()
+    out_file = os.path.join(output, 'snrs_distribution.pdf')
+    plt.savefig(out_file)
+    plt.close()
+
+
+def plot_peaks(peaks, output):
+    fig, ax = plt.subplots(figsize=(5, 5))
+
+    sns.displot(peaks, kind="kde")
+
+    fig.tight_layout()
+    out_file = os.path.join(output, 'peaks_distribution.pdf')
+    plt.savefig(out_file)
+    plt.close()
