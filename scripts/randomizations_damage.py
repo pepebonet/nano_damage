@@ -128,10 +128,12 @@ def do_randomizations(probs, N_damage):
     """
 
     expecteds = []; 
-    for i in tqdm(range(500)):
+    for i in tqdm(range(100)):
         randoms = np.zeros([len(probs), 147])
         for j in range(len(probs)):
-            random_draws = np.random.choice(range(147), N_damage[j], p=probs[j])
+            random_draws = np.random.choice(
+                range(147), N_damage[j], p=probs[j], replace=False
+            )
             for el in random_draws: 
                 randoms[j, el] += 1
 
@@ -176,6 +178,30 @@ def compute_snr(rel_increase):
     return peaks, snrs
 
 
+def get_snr_observed(obs, exp):
+    """ Get relative increase of the randoms against the mean expected
+    Args:
+        rel_increase: relative increases for every randomization
+    Returns:
+        peaks: peak of periodicity
+        snrs: signal to noise ratio calculated
+    """
+
+    exp = pd.DataFrame(exp).reset_index()
+    exp['index'] = exp['index'] + 1
+    exp = exp.rename(columns={'index': 'Position', 0: 'Expected_damage'})
+    obs = obs.merge(exp, on='Position')
+
+    rel_inc = (obs['Observed_damage'].values - \
+        obs['Expected_damage'].values) / obs['Expected_damage'].values
+
+    _, _, snr, peak = ns.compute_spectrum(
+        rel_inc, norm=True, low_p=5, high_p=15, low_t=0, high_t=len(rel_inc)-2
+    )
+
+    return peak, snr
+
+
 # ------------------------------------------------------------------------------
 # CLICK
 # ------------------------------------------------------------------------------
@@ -204,19 +230,17 @@ def main(damage_nucleosomes, enrichment_data, output):
 
     rel_increases = get_rel_increase(mean_expected, randoms_expected)
 
-    #TODO <JB> 
-    #   1.- Compute the SNR for every relative increase randomization (Done)
-    #   2.- Get distribution of SNR and plot it
-    #   3.- Get the empiric p-value for the SNR of the observed damage
+    peak_obs, snr_obs = get_snr_observed(final_dam, mean_expected)
 
     peaks, snrs = compute_snr(rel_increases)
 
     #TODO <JB> Maybe remove
-    pl.plot_peaks(peaks, output)
-    pl.plot_snrs(snrs, output)
+    pl.plot_peaks(peaks, peak_obs, output)
+    pl.plot_snrs(snrs, snr_obs, output)
 
-    import pdb;pdb.set_trace()
-
+    p_val = (len(np.argwhere(np.asarray(snrs) > snr_obs)) + 1) / (len(snrs) + 1)
+    print(p_val)
+    
 
 if __name__ == '__main__':
     main()
