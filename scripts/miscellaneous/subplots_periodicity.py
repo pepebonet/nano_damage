@@ -25,7 +25,8 @@ def config_params_full(font_size=7):
     plt.rcParams['ytick.minor.width'] = 0.4
 
 
-def wave_painting_zoomin(xvals, yvals, axs, color_in, color_out, color_other, line_width):
+def wave_painting_zoomin(xvals, yvals, axs, color_in, 
+    color_out, color_other, line_width):
 
     colors = []
     number_to_split = 10
@@ -67,7 +68,8 @@ def wave_painting_zoomin(xvals, yvals, axs, color_in, color_out, color_other, li
     for i in range(len(to_plot) - 1):
         x, v, c = to_plot[i]
         x2, v2, c2 = to_plot[i + 1]
-        axs.plot((x, x2), (v, v2), c=c, lw=line_width, solid_capstyle='round', solid_joinstyle='round')
+        axs.plot((x, x2), (v, v2), c=c, lw=line_width, \
+            solid_capstyle='round', solid_joinstyle='round')
 
 
 def wave_painting_zoomout(xvals, yvals, axs, good_local_maxima):
@@ -121,17 +123,17 @@ def rectangles_drawing(axs, half_win, color1, color2):
     ax2 = axs.twinx()
     ax2.set_xticks(axs.get_xticks())
 
-    for xv in po.DYAD_X_SMALL:
+    for xv in po.DYAD_X:
 
-        ax2.add_patch(plt.Rectangle((xv - 2.575, -0.105), 5.15, 0.06, color=color1,
-                                    clip_on=False, linewidth=0))
+        ax2.add_patch(plt.Rectangle((xv - 2.575, -0.105), 
+            5.15, 0.06, color=color1, clip_on=False, linewidth=0))
 
-        if xv != -10.3:
-            ax2.add_patch(plt.Rectangle((xv - 2.575 + 5.15, -0.105), 5.15, 0.06, color=color2,
-                                        clip_on=False, linewidth=0))
-
-    ax2.add_patch(plt.Rectangle((-61.8 - 2.575 + 5.15, -0.105), 5.15, 0.06, color=color2,
-                                clip_on=False, linewidth=0, ))
+        if (xv != -10.3) & (xv != 72.1):
+            ax2.add_patch(plt.Rectangle((xv - 2.575 + 5.15, -0.105), 
+                5.15, 0.06, color=color2, clip_on=False, linewidth=0))
+        
+    ax2.add_patch(plt.Rectangle((-61.8 - 2.575 + 5.15, -0.105), 
+        5.15, 0.06, color=color2, clip_on=False, linewidth=0, ))
 
     axs.spines["bottom"].set_position(("axes", -0.1093))
 
