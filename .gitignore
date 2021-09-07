@@ -1,6 +1,7 @@
 outputs/*
 *png
 scripts/__pycache__
+scripts/miscellaneous/__pycache__
 access_token/*
 *tsv
 *pdf
