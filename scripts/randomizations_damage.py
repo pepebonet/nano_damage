@@ -45,8 +45,14 @@ def obtain_observed_damage(df_nuc):
     return observed
 
 
-#Obtain base for the position in the file
+
 def annot(df):
+    """ Obtain nucleosome sequence
+    Args:
+        df: dataframe with the position information
+    Returns:
+        seq_pos: nucleosome sequence for the position
+    """
     seq_pos = refseq('saccer3', df['CHROM'], df['Start_nuc'] - 1, 149)
     return seq_pos
 
@@ -58,7 +64,7 @@ def get_info_damage(df):
     Returns:
         sequences: sequence of every nucleosome
         strand: strand of the sequence
-        N_damage: c
+        N_damage: vector with the amount of damage
     """
 
     df = ndn.num2chr(df)
@@ -125,7 +131,7 @@ def do_randomizations(probs, N_damage):
         probs: normalized probabilities for every  
         N_damage: amount of the damage for every sequence
     Returns:
-        randoms: 1000 randomizations of expected damage
+        expecteds: 1000 randomizations of expected damage
     """
 
     expecteds = []; 
@@ -182,12 +188,16 @@ def compute_snr(rel_increase, peak_obs):
 
 
 def get_snr_observed(obs, exp):
-    """ Get relative increase of the randoms against the mean expected
+    """ Get snr of the observed damage and the spectrum information
     Args:
-        rel_increase: relative increases for every randomization
+        obs: dataframe with the observed damage
+        exp: expected damage
     Returns:
-        peaks: peak of periodicity
-        snrs: signal to noise ratio calculated
+        obs: dataframe containing the relative increase
+        peak: peak of periodicity
+        snr: signal to noise ratio calculated
+        x: spectrum output x-axis
+        y: spectrum output y-axis
     """
 
     exp = pd.DataFrame(exp).reset_index()
@@ -250,8 +260,9 @@ def main(damage_nucleosomes, enrichment_data, output):
 
     #TODO <JB> 
     #   1.- Write information for functions properly
-    #   2.- Try to expand width of plots to 147 
-    #   3.- Extract damage at minor-in/out 
+    #   2.- Try to expand width of plots to 147
+    #   3.- Clean up and organize spectrum and plot scripts 
+    #   4.- Extract damage at minor-in/out 
     
 
 if __name__ == '__main__':
