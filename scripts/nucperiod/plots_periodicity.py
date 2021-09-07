@@ -4,8 +4,8 @@ from matplotlib import ticker
 import matplotlib.pyplot as plt
 from rpy2.robjects import pandas2ri
 
-import miscellaneous.positions as po
-from miscellaneous.subplots_periodicity import wave_painting_zoomin, \
+import nucperiod.positions as po
+from nucperiod.subplots_periodicity import wave_painting_zoomin, \
     rectangles_drawing, config_params_full
 
 

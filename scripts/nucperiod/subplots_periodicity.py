@@ -3,7 +3,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-import miscellaneous.positions as po
+import nucperiod.positions as po
 
 def config_params(font_size=7):
     mpl.rcParams.update(mpl.rcParamsDefault)
@@ -93,7 +93,10 @@ def wave_painting_zoomout(xvals, yvals, axs, good_local_maxima):
         for p in range(int(maxima) - 73, int(maxima) + 74):
             nucleosome_zone.append(p)
 
-    for p in range(int(good_local_maxima[ix + 1]) - 73, int(good_local_maxima[ix + 1]) + 74):  # add last nucleosome
+    # add last nucleosome
+    for p in range(int(good_local_maxima[ix + 1]) - 73, \
+        int(good_local_maxima[ix + 1]) + 74):
+        
         nucleosome_zone.append(p)
 
     colors = []
