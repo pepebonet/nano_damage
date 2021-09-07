@@ -8,9 +8,9 @@ from collections import Counter
 
 import utils as ut
 import plots as pl
+import nucperiod.spectral as ns
 import nucleosome_damage_norm as ndn
-import miscellaneous.new_spectral as ns
-import miscellaneous.plots_periodicity as pp
+import nucperiod.plots_periodicity as pp
 
 
 def load_data(damage_nucleosomes, enrichment_path):
@@ -45,7 +45,6 @@ def obtain_observed_damage(df_nuc):
     return observed
 
 
-
 def annot(df):
     """ Obtain nucleosome sequence
     Args:
@@ -53,7 +52,9 @@ def annot(df):
     Returns:
         seq_pos: nucleosome sequence for the position
     """
+
     seq_pos = refseq('saccer3', df['CHROM'], df['Start_nuc'] - 1, 149)
+
     return seq_pos
 
 
@@ -121,7 +122,7 @@ def get_expected_damage(df, enrichment):
     
     mean_expected = [sum(x) for x in zip(*prob_all_nuc_mean)]
     randoms_expected = do_randomizations(prob_all_nuc, N_damage)
-
+    
     return mean_expected, randoms_expected
 
 
@@ -135,7 +136,7 @@ def do_randomizations(probs, N_damage):
     """
 
     expecteds = []; 
-    for i in tqdm(range(1000)):
+    for i in tqdm(range(100)):
         randoms = np.zeros([len(probs), 147])
         for j in range(len(probs)):
             random_draws = np.random.choice(
@@ -237,32 +238,36 @@ def main(damage_nucleosomes, enrichment_data, output):
 
     dam_nuc, enrichment = load_data(damage_nucleosomes, enrichment_data)
 
-    #Obtain observed damage in the nucleosomes
+    # Obtain observed damage in the nucleosomes
     final_dam = obtain_observed_damage(dam_nuc)
 
-    #compute expected damage (Needs revision)
+    # Compute expected damage (Needs revision)
     mean_expected, randoms_expected = get_expected_damage(dam_nuc, enrichment)
 
+    # Compute relative increases of all randomizations
     rel_increases = get_rel_increase(mean_expected, randoms_expected)
 
+    # Compute the snr of the observed damage
     rel_inc_obs, peak_obs, snr_obs, x, y = get_snr_observed(final_dam, mean_expected)
 
+    # Compute snrs of expected randomizations
     peaks, snrs = compute_snr(rel_increases, peak_obs)
 
-    #TODO <JB> Maybe remove
+    # #TODO <JB> Remove in production
     pl.plot_peaks(peaks, peak_obs, output)
     pl.plot_snrs(snrs, snr_obs, output)
 
     p_val = (len(np.argwhere(np.asarray(snrs) > snr_obs)) + 1) / (len(snrs) + 1)
     print(p_val)
 
+    # Plot periodicity
     pp.plot(rel_inc_obs, x, y, snr_obs, peak_obs, p_val, output)
 
     #TODO <JB> 
-    #   1.- Write information for functions properly
-    #   2.- Try to expand width of plots to 147
-    #   3.- Clean up and organize spectrum and plot scripts 
-    #   4.- Extract damage at minor-in/out 
+    #   1.- Extract damage at minor-in/out ¿?
+    #   2.- Separate plots periodogram and nucperiod
+    #   3.- Start zoom-out analysis and plots
+    #   4.- Parser of the number of randomizations
     
 
 if __name__ == '__main__':
