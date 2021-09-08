@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import click
 import numpy as np
 import pandas as pd
@@ -221,6 +222,15 @@ def get_snr_observed(obs, exp, center):
     return obs, peak, snr, x, y
 
 
+def save_data(peak, snr, pval, output):
+
+    df = pd.DataFrame([[peak, snr, pval, snr/pval]], 
+        columns=['peak', 'snr', 'p-value', 'snr/pval'])
+    
+    out_file = os.path.join(output, 'peak_snr_pval_data.tsv')
+    df.to_csv(out_file, sep='\t', index=None)
+
+
 # ------------------------------------------------------------------------------
 # CLICK
 # ------------------------------------------------------------------------------
@@ -250,7 +260,7 @@ def get_snr_observed(obs, exp, center):
 )
 def main(damage_nucleosomes, enrichment_data, number_randoms, 
     center_period, plotting, output):
-    import pdb;pdb.set_trace()
+    
     dam_nuc, enrichment = load_data(damage_nucleosomes, enrichment_data)
 
     # Obtain observed damage in the nucleosomes
@@ -275,6 +285,8 @@ def main(damage_nucleosomes, enrichment_data, number_randoms,
     # Compute empirical p-value
     p_val = (len(np.argwhere(np.asarray(snrs) > snr_obs)) + 1) / (len(snrs) + 1)
     
+    save_data(peak_obs, snr_obs, p_val, output)
+
     if plotting:
         # #TODO <JB> Remove in production
         try:
@@ -283,15 +295,16 @@ def main(damage_nucleosomes, enrichment_data, number_randoms,
             pass
         pl.plot_snrs(snrs, snr_obs, output)
 
-
         # Plot periodicity
         pp.plot(rel_inc_obs, x, y, snr_obs, peak_obs, p_val, output)
 
     #TODO <JB> 
     #   1.- Build snakemake to get heatmap analysis
-    #   1.- Extract damage at minor-in/out ¿?
-    #   2.- Separate plots periodogram and nucperiod
-    #   3.- Start zoom-out analysis and plots
+    #       1.1. Reuse snakemake files to build pipeline
+    #       1.2. Test it in the cluster 
+    #   2.- Extract damage at minor-in/out ¿?
+    #   3.- Separate plots periodogram and nucperiod
+    #   4.- Start zoom-out analysis and plots
     
 
 if __name__ == '__main__':
