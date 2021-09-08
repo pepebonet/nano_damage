@@ -190,7 +190,7 @@ def compute_snr(rel_increase, peak_obs):
     return peaks, snrs
 
 
-def get_snr_observed(obs, exp):
+def get_snr_observed(obs, exp, center):
     """ Get snr of the observed damage and the spectrum information
     Args:
         obs: dataframe with the observed damage
@@ -214,7 +214,8 @@ def get_snr_observed(obs, exp):
     obs['rel_inc'] = rel_inc
 
     x, y, snr, peak = ns.compute_spectrum(
-        rel_inc, norm=True, low_p=5, high_p=50, low_t=0, high_t=len(rel_inc)-2
+        rel_inc, norm=True, low_p=5, high_p=50, low_t=0, high_t=len(rel_inc)-2,
+        center=center
     )
     
     return obs, peak, snr, x, y
@@ -238,10 +239,18 @@ def get_snr_observed(obs, exp):
     help='Number of randomizations to run to assess significance'
 )
 @click.option(
+    '-cp', '--center_period', default=None, 
+    help='Center of the period to compute the DTFT'
+)
+@click.option(
+    '-p', '--plotting', is_flag=True, help='whether to obtain any plots'
+)
+@click.option(
     '-o', '--output', default='', help='output folder'
 )
-def main(damage_nucleosomes, enrichment_data, number_randoms, output):
-
+def main(damage_nucleosomes, enrichment_data, number_randoms, 
+    center_period, plotting, output):
+    import pdb;pdb.set_trace()
     dam_nuc, enrichment = load_data(damage_nucleosomes, enrichment_data)
 
     # Obtain observed damage in the nucleosomes
@@ -256,25 +265,30 @@ def main(damage_nucleosomes, enrichment_data, number_randoms, output):
     rel_increases = get_rel_increase(mean_expected, randoms_expected)
 
     # Compute the snr of the observed damage
-    rel_inc_obs, peak_obs, snr_obs, x, y = get_snr_observed(final_dam, mean_expected)
+    rel_inc_obs, peak_obs, snr_obs, x, y = get_snr_observed(
+        final_dam, mean_expected, center_period
+    )
 
     # Compute snrs of expected randomizations
     peaks, snrs = compute_snr(rel_increases, peak_obs)
-    
-    # #TODO <JB> Remove in production
-    try:
-        pl.plot_peaks(peaks, peak_obs, output)
-    except:
-        pass
-    pl.plot_snrs(snrs, snr_obs, output)
 
+    # Compute empirical p-value
     p_val = (len(np.argwhere(np.asarray(snrs) > snr_obs)) + 1) / (len(snrs) + 1)
-    print(p_val)
+    
+    if plotting:
+        # #TODO <JB> Remove in production
+        try:
+            pl.plot_peaks(peaks, peak_obs, output)
+        except:
+            pass
+        pl.plot_snrs(snrs, snr_obs, output)
 
-    # Plot periodicity
-    pp.plot(rel_inc_obs, x, y, snr_obs, peak_obs, p_val, output)
+
+        # Plot periodicity
+        pp.plot(rel_inc_obs, x, y, snr_obs, peak_obs, p_val, output)
 
     #TODO <JB> 
+    #   1.- Build snakemake to get heatmap analysis
     #   1.- Extract damage at minor-in/out ¿?
     #   2.- Separate plots periodogram and nucperiod
     #   3.- Start zoom-out analysis and plots
