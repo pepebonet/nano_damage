@@ -100,14 +100,18 @@ def compute_spectrum(signal, norm=True, center=None, **kwargs):
             snr: float: signal-to-noise ratio
             peak: float: period of maximum power
     """
+
     # 3-bp average smoothing reduces effects of 3-bp periodic signal
     signal = mean_smooth(signal, 3)  
     power = compute_fourier(signal, **kwargs)  # compute fourier encloses
+
     if norm:
         power = normalize(power, kwargs['low_p'], kwargs['high_p'])
+        
     x = np.linspace(kwargs['low_p'], kwargs['high_p'], 100)
     y = list(map(power, x))
     snr, peak = compute_signal_to_noise(x, y, center=center)
+
     return x, y, snr, peak
 
 
@@ -147,7 +151,7 @@ def compute_signal_to_noise(x, y, center=None):
     if center is None:
         peak = x[np.argmax(y)]
     else:
-        peak = center
+        peak = np.float(center)
     
     for i, v in enumerate(x):
         if peak - 0.25 <= v <= peak + 0.25:
