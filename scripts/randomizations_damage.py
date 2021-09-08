@@ -86,11 +86,12 @@ def get_info_damage(df):
     return sequences, strand, N_damage
 
 
-def get_expected_damage(df, enrichment):
+def get_expected_damage(df, enrichment, N_randoms):
     """ Get expected damage based on trinucleotide context 
     Args:
         df: dataframe with damage in nucleosomes
         enrichment: dataframe containing the triple enrichment probabilities
+        N_randoms: number of randomizations to run
     Returns:
         mean_expected: mean expected damage per position in the nucleosome
         randoms_expected: randomizations of damage per position in the nucleosome
@@ -121,22 +122,23 @@ def get_expected_damage(df, enrichment):
         prob_all_nuc_mean.append(prob_nuc_norm_mean)
     
     mean_expected = [sum(x) for x in zip(*prob_all_nuc_mean)]
-    randoms_expected = do_randomizations(prob_all_nuc, N_damage)
+    randoms_expected = do_randomizations(prob_all_nuc, N_damage, N_randoms)
     
     return mean_expected, randoms_expected
 
 
-def do_randomizations(probs, N_damage):
+def do_randomizations(probs, N_damage, N_randoms):
     """ Get randomizations of expected damage
     Args:
         probs: normalized probabilities for every  
         N_damage: amount of the damage for every sequence
+        N_randoms: number of randomizations to run
     Returns:
         expecteds: 1000 randomizations of expected damage
     """
 
     expecteds = []; 
-    for i in tqdm(range(100)):
+    for i in tqdm(range(N_randoms)):
         randoms = np.zeros([len(probs), 147])
         for j in range(len(probs)):
             random_draws = np.random.choice(
@@ -180,7 +182,7 @@ def compute_snr(rel_increase, peak_obs):
 
     for signal in tqdm(rel_increase):
         x, y, snr, peak = ns.compute_spectrum(
-            signal, norm=True, low_p=5, high_p=15, low_t=0, high_t=len(signal)-2,
+            signal, norm=True, low_p=5, high_p=50, low_t=0, high_t=len(signal)-2,
             center=peak_obs
         )
         peaks.append(peak); snrs.append(snr)
@@ -212,7 +214,7 @@ def get_snr_observed(obs, exp):
     obs['rel_inc'] = rel_inc
 
     x, y, snr, peak = ns.compute_spectrum(
-        rel_inc, norm=True, low_p=5, high_p=15, low_t=0, high_t=len(rel_inc)-2
+        rel_inc, norm=True, low_p=5, high_p=50, low_t=0, high_t=len(rel_inc)-2
     )
     
     return obs, peak, snr, x, y
@@ -232,9 +234,13 @@ def get_snr_observed(obs, exp):
         enrichment probabilities normalized to one'
 )
 @click.option(
+    '-nr', '--number_randoms', default=1000, 
+    help='Number of randomizations to run to assess significance'
+)
+@click.option(
     '-o', '--output', default='', help='output folder'
 )
-def main(damage_nucleosomes, enrichment_data, output):
+def main(damage_nucleosomes, enrichment_data, number_randoms, output):
 
     dam_nuc, enrichment = load_data(damage_nucleosomes, enrichment_data)
 
@@ -242,7 +248,9 @@ def main(damage_nucleosomes, enrichment_data, output):
     final_dam = obtain_observed_damage(dam_nuc)
 
     # Compute expected damage (Needs revision)
-    mean_expected, randoms_expected = get_expected_damage(dam_nuc, enrichment)
+    mean_expected, randoms_expected = get_expected_damage(
+        dam_nuc, enrichment, number_randoms
+    )
 
     # Compute relative increases of all randomizations
     rel_increases = get_rel_increase(mean_expected, randoms_expected)
@@ -252,9 +260,12 @@ def main(damage_nucleosomes, enrichment_data, output):
 
     # Compute snrs of expected randomizations
     peaks, snrs = compute_snr(rel_increases, peak_obs)
-
+    
     # #TODO <JB> Remove in production
-    pl.plot_peaks(peaks, peak_obs, output)
+    try:
+        pl.plot_peaks(peaks, peak_obs, output)
+    except:
+        pass
     pl.plot_snrs(snrs, snr_obs, output)
 
     p_val = (len(np.argwhere(np.asarray(snrs) > snr_obs)) + 1) / (len(snrs) + 1)
@@ -267,7 +278,6 @@ def main(damage_nucleosomes, enrichment_data, output):
     #   1.- Extract damage at minor-in/out ¿?
     #   2.- Separate plots periodogram and nucperiod
     #   3.- Start zoom-out analysis and plots
-    #   4.- Parser of the number of randomizations
     
 
 if __name__ == '__main__':
