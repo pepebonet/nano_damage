@@ -112,7 +112,7 @@ def compute_spectrum(signal, norm=True, center=None, **kwargs):
     y = list(map(power, x))
     snr, peak = compute_signal_to_noise(x, y, center=center)
 
-    return x, y, snr, peak
+    return x, y, snr, peak, signal
 
 
 def closest_index(x, value):
