@@ -12,6 +12,7 @@ from collections import Counter
 from tqdm import tqdm
 import utils as ut
 import plots as pl
+import nucperiod.plots_periodicity as pp
 
 
 # ------------------------------------------------------------------------------
@@ -238,6 +239,10 @@ def main(damage, nucleosome_information, enrichment_data, output):
     
     #save damage dataframe
     final_dam = arrange_df_and_save(final_dam, expected_damage, output)
+
+    import pdb;pdb.set_trace()
+    #plots for Pich et al.
+    pp.plot_zoomout(final_dam, output)
 
     #plot relative damage increase in the nucleosome
     per_base_dir = os.path.join(output,'zoom_out_results')
