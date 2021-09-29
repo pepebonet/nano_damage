@@ -6,7 +6,7 @@ from rpy2.robjects import pandas2ri
 
 import nucperiod.positions as po
 from nucperiod.subplots_periodicity import wave_painting_zoomin, \
-    rectangles_drawing, config_params_full
+    rectangles_drawing, config_params_full, wave_painting_zoomout
 
 
 pandas2ri.activate()
@@ -77,5 +77,36 @@ def plot(time, x, y, snr, peak, pval, output):
 
     plt.tight_layout()
     out_file = os.path.join(output, 'nucleosome_periodicity.pdf')
+    plt.savefig(out_file)
+    plt.close()
+
+
+def plot_zoomout(time, output):
+    config_params_full()
+    xvals, yvals = get_dict(time)
+
+    val = spline(xvals, yvals)
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7.5 / 2.13))
+    plt.subplots_adjust(hspace=0.001)
+
+    for xd in po.DYAD_X:
+        ax.axvline(xd, color='black', linestyle='--', lw=0.2, alpha=0.5)
+
+    ax.plot(xvals, yvals, linewidth=0.3, color='lightblue', alpha=0.7)
+
+    wave_painting_zoomout(
+        list(val), list(val[1]), ax, [500]
+    )
+    
+    ax.set_ylabel('Relative increase damage')
+    ax.set_xlabel('Distance from dyad (bp)')
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+
+    plt.tight_layout()
+    out_file = os.path.join(output, 'zoomout_periodicity.pdf')
     plt.savefig(out_file)
     plt.close()
