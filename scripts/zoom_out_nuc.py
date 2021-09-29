@@ -182,7 +182,7 @@ def arrange_df_and_save(final_dam, expected_damage, output):
     final_dam['rel_inc'] = (final_dam['Observed_damage'].values - \
         final_dam['Expected_damage'].values) / final_dam['Expected_damage'].values
     
-    final_dam['Position'] = range(-500, 501)
+    final_dam['Position'] = final_dam['Position'] - 501
 
     out_file = os.path.join(output, 'exp_obs_relinc.tsv')
     final_dam.to_csv(out_file, sep='\t', index=None)
@@ -204,12 +204,12 @@ def get_snr_observed(obs, center=None):
 
     rel_inc = obs['rel_inc'].tolist()
 
-    x, y, snr, peak = ns.compute_spectrum(
-        rel_inc, norm=True, low_p=5, high_p=200, low_t=0, high_t=len(rel_inc)-2,
+    x, y, snr, peak, signal = ns.compute_spectrum(
+        rel_inc, norm=True, low_p=5, high_p=260, low_t=0, high_t=len(rel_inc)-2,
         center=center
     )
     
-    return obs, peak, snr, x, y
+    return obs, peak, snr, x, y, signal
 
 # ------------------------------------------------------------------------------
 # CLICK
@@ -235,7 +235,7 @@ def main(damage, nucleosome_information, enrichment_data, output):
     damage, nucleosomes, enrichment = load_data(
         damage, nucleosome_information, enrichment_data
     )
-    
+    # damage = damage.sample(n=500)
     #obtain start and end positions
     damage = add_dam_se(damage)
     nucleosomes = add_nuc_se(nucleosomes)
@@ -264,16 +264,12 @@ def main(damage, nucleosome_information, enrichment_data, output):
     final_dam = arrange_df_and_save(final_dam, expected_damage, output)
 
     # Compute the snr of the observed damage
-    rel_inc_obs, peak_obs, snr_obs, x, y = get_snr_observed(
-        final_dam, expected_damage
+    rel_inc_obs, peak_obs, snr_obs, x, y, signal = get_snr_observed(
+        final_dam
     )
-    import pdb; pdb.set_trace()
-    #plots for Pich et al.
-    pp.plot_zoomout(final_dam, output)
 
-    #plot relative damage increase in the nucleosome
-    # per_base_dir = os.path.join(output,'zoom_out_results')
-    # pl.plot_zoom_out_nucleosomes(final_dam, per_base_dir)
+    #plots for Pich et al.
+    pp.plot_zoomout(final_dam, snr_obs, peak_obs, x, y, signal, output)
 
 
 if __name__ == '__main__':
