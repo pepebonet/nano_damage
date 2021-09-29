@@ -182,7 +182,7 @@ def compute_snr(rel_increase, peak_obs):
     peaks, snrs = [], []
 
     for signal in tqdm(rel_increase):
-        x, y, snr, peak = ns.compute_spectrum(
+        x, y, snr, peak, signal = ns.compute_spectrum(
             signal, norm=True, low_p=5, high_p=50, low_t=0, high_t=len(signal)-2,
             center=peak_obs
         )
@@ -214,7 +214,7 @@ def get_snr_observed(obs, exp, center):
 
     obs['rel_inc'] = rel_inc
 
-    x, y, snr, peak = ns.compute_spectrum(
+    x, y, snr, peak, signal = ns.compute_spectrum(
         rel_inc, norm=True, low_p=5, high_p=50, low_t=0, high_t=len(rel_inc)-2,
         center=center
     )
