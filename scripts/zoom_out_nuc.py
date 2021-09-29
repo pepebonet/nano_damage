@@ -12,6 +12,7 @@ from collections import Counter
 from tqdm import tqdm
 import utils as ut
 import plots as pl
+import nucperiod.spectral as ns
 import nucperiod.plots_periodicity as pp
 
 
@@ -178,7 +179,7 @@ def arrange_df_and_save(final_dam, expected_damage, output):
     exp = exp.rename(columns={'index': 'Position', 0: 'Expected_damage'})
     final_dam = final_dam.merge(exp, on='Position')
 
-    final_dam['Relative Increase'] = (final_dam['Observed_damage'].values - \
+    final_dam['rel_inc'] = (final_dam['Observed_damage'].values - \
         final_dam['Expected_damage'].values) / final_dam['Expected_damage'].values
     
     final_dam['Position'] = range(-500, 501)
@@ -187,6 +188,28 @@ def arrange_df_and_save(final_dam, expected_damage, output):
     final_dam.to_csv(out_file, sep='\t', index=None)
 
     return final_dam
+
+
+def get_snr_observed(obs, center=None):
+    """ Get snr of the observed damage and the spectrum information
+    Args:
+        obs: dataframe with the observed damage
+    Returns:
+        obs: dataframe containing the relative increase
+        peak: peak of periodicity
+        snr: signal to noise ratio calculated
+        x: spectrum output x-axis
+        y: spectrum output y-axis
+    """
+
+    rel_inc = obs['rel_inc'].tolist()
+
+    x, y, snr, peak = ns.compute_spectrum(
+        rel_inc, norm=True, low_p=5, high_p=200, low_t=0, high_t=len(rel_inc)-2,
+        center=center
+    )
+    
+    return obs, peak, snr, x, y
 
 # ------------------------------------------------------------------------------
 # CLICK
@@ -240,13 +263,17 @@ def main(damage, nucleosome_information, enrichment_data, output):
     #save damage dataframe
     final_dam = arrange_df_and_save(final_dam, expected_damage, output)
 
-    import pdb;pdb.set_trace()
+    # Compute the snr of the observed damage
+    rel_inc_obs, peak_obs, snr_obs, x, y = get_snr_observed(
+        final_dam, expected_damage
+    )
+    import pdb; pdb.set_trace()
     #plots for Pich et al.
     pp.plot_zoomout(final_dam, output)
 
     #plot relative damage increase in the nucleosome
-    per_base_dir = os.path.join(output,'zoom_out_results')
-    pl.plot_zoom_out_nucleosomes(final_dam, per_base_dir)
+    # per_base_dir = os.path.join(output,'zoom_out_results')
+    # pl.plot_zoom_out_nucleosomes(final_dam, per_base_dir)
 
 
 if __name__ == '__main__':
