@@ -81,30 +81,43 @@ def plot(time, x, y, snr, peak, pval, output):
     plt.close()
 
 
-def plot_zoomout(time, output):
+
+def plot_zoomout(time, snr, peak, x, y, signal, output):
     config_params_full()
-    xvals, yvals = get_dict(time)
 
-    val = spline(xvals, yvals)
+    xvals = time['Position'].tolist()
+    yvals = time['rel_inc'].tolist()
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7.5 / 2.13))
+    val = spline(xvals, yvals, spar=0.55)
+    
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(7.5 / 2.13, 7.5 / 1.83))
     plt.subplots_adjust(hspace=0.001)
 
-    for xd in po.DYAD_X:
-        ax.axvline(xd, color='black', linestyle='--', lw=0.2, alpha=0.5)
+    ax[0].plot(xvals, yvals, linewidth=0.3, color='lightblue', alpha=0.7)
 
-    ax.plot(xvals, yvals, linewidth=0.3, color='lightblue', alpha=0.7)
+    # wave_painting_zoomout(list(val[0]), list(val[1]), ax[0], [353, 500, 647])
+    ax[0].plot(list(val[0]), list(val[1]), linewidth=1, color='#08519c', alpha=0.9)
 
-    wave_painting_zoomout(
-        list(val), list(val[1]), ax, [500]
+    ax[0].set_xlim(-520, 520)
+
+    ax[1].plot(x, y, color='#31a354', lw=1.2)
+    ax[1].set_xlim(100, 250)
+
+    ax[0].set_title('n = 1, SNR = {}\nMP = {}'.format(
+        round(snr, 2), round(peak, 2)), fontsize=7.5)
+    ax[1].set_title('SNR = {}, MP = {}'.format(
+        round(snr, 2), round(peak, 2)), fontsize=7.5
     )
-    
-    ax.set_ylabel('Relative increase damage')
-    ax.set_xlabel('Distance from dyad (bp)')
+    ax[0].set_ylabel('Relative increase damage')
+    ax[0].set_xlabel('Distance from dyad (bp)')
+    ax[1].set_ylabel('Power')
+    ax[1].set_xlabel('Period (bp)')
 
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.spines['left'].set_visible(False)
+    ax[1].spines['right'].set_visible(False)
+    ax[1].spines['top'].set_visible(False)
+    ax[0].spines['right'].set_visible(False)
+    ax[0].spines['top'].set_visible(False)
+    ax[0].spines['left'].set_visible(False)
 
     plt.tight_layout()
     out_file = os.path.join(output, 'zoomout_periodicity.pdf')
