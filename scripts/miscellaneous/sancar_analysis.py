@@ -8,9 +8,13 @@ from collections import defaultdict
 
 
 def read_pair_generator(bam, region_string=None):
-    """
-    Generate read pairs in a BAM file or within a region string.
-    Reads are added to read_dict until a pair is found.
+    """ Generate read pairs in a BAM file or within a region string.
+        Reads are added to read_dict until a pair is found.
+    Args:
+        bam: bam file to process
+        region_string: Region to process
+    Returns:
+        generator object containig pairs of reads
     """
     read_dict = defaultdict(lambda: [None, None])
     for read in bam.fetch(region=region_string):
@@ -46,13 +50,28 @@ def main(damage_sancar, output):
     #Obtain data
     bam = pysam.AlignmentFile(damage_sancar, 'rb')
 
-    reads_to_delete = []
+    reads_to_delete = []; counter = 0
     for read1, read2 in read_pair_generator(bam):
+        # import pdb;pdb.set_trace()
+        if (read1.pos == read2.pos) and \
+            (read1.query_alignment_end == read2.query_alignment_end): 
 
-        # if read1.pos == read2.pos and 
-        # do stuff
-        import pdb;pdb.set_trace()
+            reads_to_delete.append(read1)
+            reads_to_delete.append(read2)
+            # import pdb;pdb.set_trace()
+        
+        elif read1.is_duplicate or read2.is_duplicate:
+            import pdb;pdb.set_trace()
 
+        elif read1.is_unmapped or read2.is_unmapped:
+            import pdb;pdb.set_trace()
+
+        else:
+            counter += 1
+
+            if  counter % 500 == 0: 
+                print(counter)
+    import pdb;pdb.set_trace()
     #TODO <JB>:
     #   1.- Remove PCR artifacts 
     #       1.1. Use samtools and bedtools to delete reads where 
