@@ -1,21 +1,35 @@
 #!/usr/bin/envs/ python3
 
 import click
+import pysam
 import numpy as np
-from Bio import SeqIO
-from collections import Counter
+from collections import defaultdict
 
 
 
-#Parse fastq files to extract last base enrichment and per read length
-def parse_fastq(df):
-    a = ''; read_length_dist = []
+def read_pair_generator(bam, region_string=None):
+    """
+    Generate read pairs in a BAM file or within a region string.
+    Reads are added to read_dict until a pair is found.
+    """
+    read_dict = defaultdict(lambda: [None, None])
+    for read in bam.fetch(region=region_string):
+        if not read.is_proper_pair or read.is_secondary or read.is_supplementary:
+            continue
+        qname = read.query_name
+        if qname not in read_dict:
+            if read.is_read1:
+                read_dict[qname][0] = read
+            else:
+                read_dict[qname][1] = read
+        else:
+            if read.is_read1:
+                yield read, read_dict[qname][1]
+            else:
+                yield read_dict[qname][0], read
+            del read_dict[qname]
 
-    for record in SeqIO.parse(df, "fastq"):
-        import pdb;pdb.set_trace()
-        read_length_dist.append(np.log(len(record.seq)))
-        a += record.seq[-1]
-    return Counter(a), read_length_dist
+
 
 # ------------------------------------------------------------------------------
 # CLICK
@@ -30,8 +44,14 @@ def parse_fastq(df):
 )
 def main(damage_sancar, output):
     #Obtain data
-    parse_fastq(damage_sancar)
-    import pdb;pdb.set_trace()
+    bam = pysam.AlignmentFile(damage_sancar, 'rb')
+
+    reads_to_delete = []
+    for read1, read2 in read_pair_generator(bam):
+
+        # if read1.pos == read2.pos and 
+        # do stuff
+        import pdb;pdb.set_trace()
 
     #TODO <JB>:
     #   1.- Remove PCR artifacts 
