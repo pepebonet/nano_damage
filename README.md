@@ -63,4 +63,21 @@ Once the damage in the nucleosomes is obtained the following commands need to be
 
 ## Zoom out 
 
+On top of looking at the nucleosomes, we can also look at differences between nucleosome and linkers and check for the periodicity. To do so, the following commands are needed: 
+
+        python scripts/zoom_out_nuc.py -da outputs/retest_commands_Dec2021/mms/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o outputs/retest_commands_Dec2021/mms/ -ed outputs/retest_commands_Dec2021/mms/triplet_normalized_Nanopore.tsv
+
+        python scripts/zoom_out_nuc.py -da outputs/retest_commands_Dec2021/aag/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o outputs/retest_commands_Dec2021/aag/ -ed outputs/retest_commands_Dec2021/aag/triplet_normalized_Nanopore.tsv
+
+        python scripts/zoom_out_nuc.py -da outputs/retest_commands_Dec2021/ems/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o outputs/retest_commands_Dec2021/ems/ -ed outputs/retest_commands_Dec2021/ems/triplet_normalized_Nanopore.tsv
+
+        python scripts/zoom_out_nuc.py -da outputs/retest_commands_Dec2021/cisplatin/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o outputs/retest_commands_Dec2021/cisplatin/ -ed outputs/retest_commands_Dec2021/cisplatin/triplet_normalized_Nanopore.tsv
+
+
+## Sancar Data
+
+Commands to run the sancar data properly: 
+
+        python scripts/miscellaneous/sancar_analysis.py -ds /workspace/projects/nanopore/sancar_data/SRR3623538.1.mapped.bam.sort_normal -o . 
+
 # Example data
