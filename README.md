@@ -51,7 +51,13 @@ After the damage and the enrichment is obtained we want to focus only in the nuc
 
 ## Randomizations
 
-Once the damage in the nucleosomes is obtained the following commands need to be run to obtain the randomizations of the damage: 
+Once the damage in the nucleosomes is obtained the following commands need to be run to obtain the randomizations of the damage (remember the -nr parameter for the number of randomizations to reduce the running time): 
+
+        python scripts/randomizations_damage.py -dn outputs/retest_commands_Dec2021/mms/damage_in_nucleosomes.tsv -ed outputs/retest_commands_Dec2021/mms/triplet_normalized_Nanopore.tsv -p -o outputs/retest_commands_Dec2021/mms/
+
+        python scripts/randomizations_damage.py -dn outputs/retest_commands_Dec2021/aag/damage_in_nucleosomes.tsv -ed outputs/retest_commands_Dec2021/aag/triplet_normalized_Nanopore.tsv -p -o outputs/retest_commands_Dec2021/aag/
+
+        python scripts/randomizations_damage.py -dn outputs/retest_commands_Dec2021/ems/damage_in_nucleosomes.tsv -ed outputs/retest_commands_Dec2021/ems/triplet_normalized_Nanopore.tsv -p -o outputs/retest_commands_Dec2021/ems/ 
 
         python scripts/randomizations_damage.py -dn outputs/retest_commands_Dec2021/cisplatin/damage_in_nucleosomes.tsv -ed outputs/retest_commands_Dec2021/cisplatin/triplet_normalized_Nanopore.tsv -p -o outputs/retest_commands_Dec2021/cisplatin/
 
