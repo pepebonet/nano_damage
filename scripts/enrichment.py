@@ -83,6 +83,7 @@ def get_context_norm(ref, exp):
                 norm = exp.get(el) / ref.get(el)
                 new_d.update({el : norm})
             except:
+                #May produce this exception at NNN or NNNNN contexts
                 import pdb;pdb.set_trace()
     
     df = pd.DataFrame(new_d.items(), columns=['CONTEXT', 'REF_NORM'])
