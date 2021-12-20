@@ -20,6 +20,10 @@ names_all_2 = ['index', 'chrom', 'pos', 'base', 'strand', 'mer', 'min coverage',
        'untreated_freq', 'treated_freq', 'diff', 'group',
        'motif_1 DRWGGDD P-value', 'motif']
 
+names_all_3 = ['index', 'chrom', 'pos', 'base', 'strand', 'mer', 'min coverage',
+       'untreated_freq', 'treated_freq', 'diff', 'group',
+       'motif_1 P-value', 'motif_1 P-value', 'motif']
+
 
 def get_contexts(df, chrom_len): 
     penta_ref, triplet_ref = counts_reference_genome(chrom_len)
@@ -107,7 +111,11 @@ def main(data, chrom_len, output):
     try:
         df.columns = names_all_1
     except:
-        df.columns = names_all_2
+        try:
+            df.columns = names_all_2
+        except:
+            df.columns = names_all_3
+
     
     #optional to take only those where the treated has higher frequency
     df['value'] = df['treated_freq'] - df['untreated_freq']
@@ -118,7 +126,7 @@ def main(data, chrom_len, output):
     )
 
     df, triplet_context, penta_context = get_contexts(df, chrom_lens)
-
+    
     triplet_dir = os.path.join(output, 'triplet')
     penta_dir = os.path.join(output, 'pentamer')
     
