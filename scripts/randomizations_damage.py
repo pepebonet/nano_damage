@@ -142,11 +142,14 @@ def do_randomizations(probs, N_damage, N_randoms):
     for i in tqdm(range(N_randoms)):
         randoms = np.zeros([len(probs), 147])
         for j in range(len(probs)):
-            random_draws = np.random.choice(
-                range(147), N_damage[j], p=probs[j], replace=True
-            )
-            for el in random_draws: 
-                randoms[j, el] += 1
+            try:
+                random_draws = np.random.choice(
+                    range(147), N_damage[j], p=probs[j], replace=True
+                )
+                for el in random_draws: 
+                    randoms[j, el] += 1
+            except:
+                print("debug")
 
         expecteds.append(sum(randoms))    
 
