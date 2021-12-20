@@ -104,7 +104,10 @@ def get_expected_damage(df, enrichment, N_randoms):
     sequences, strand, N_damage = get_info_damage(df)
 
     for i, seq in tqdm(enumerate(sequences.tolist())):
-
+        
+        if len(seq) != 149:
+            continue
+        
         if  strand[i] == '-':
             seq = ut.comp_seq(seq)
         
