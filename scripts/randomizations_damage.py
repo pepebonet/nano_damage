@@ -221,7 +221,7 @@ def get_snr_observed(obs, exp, center):
     obs['rel_inc'] = rel_inc
 
     x, y, snr, peak, signal = ns.compute_spectrum(
-        rel_inc, norm=True, low_p=5, high_p=20, low_t=0, high_t=len(rel_inc)-2,
+        rel_inc, norm=True, low_p=5, high_p=50, low_t=0, high_t=len(rel_inc)-2,
         center=center
     )
     

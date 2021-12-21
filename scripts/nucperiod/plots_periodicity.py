@@ -57,7 +57,7 @@ def plot(time, x, y, snr, peak, pval, output):
     ax[0].set_xlim(-75, 75)
 
     ax[1].plot(x, y, color='#31a354', lw=1.2)
-    ax[1].set_xlim(4, 20)
+    ax[1].set_xlim(4, 50)
 
     ax[0].set_title('n = 1, SNR = {}\nMP = {}, p-value = {}, phase = -1'.format(
         round(snr, 2), round(peak, 2), round(pval, 2)), fontsize=7.5)
