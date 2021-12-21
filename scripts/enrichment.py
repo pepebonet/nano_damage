@@ -22,7 +22,7 @@ names_all_2 = ['index', 'chrom', 'pos', 'base', 'strand', 'mer', 'min coverage',
 
 names_all_3 = ['index', 'chrom', 'pos', 'base', 'strand', 'mer', 'min coverage',
        'untreated_freq', 'treated_freq', 'diff', 'group',
-       'motif_1 P-value', 'motif_1 P-value', 'motif']
+       'motif_1 P-value', 'motif_2 P-value', 'motif']
 
 
 def get_contexts(df, chrom_len): 
@@ -115,6 +115,7 @@ def main(data, chrom_len, output):
             df.columns = names_all_2
         except:
             df.columns = names_all_3
+            df.drop('motif_2 P-value', axis=1, inplace=True)
 
     
     #optional to take only those where the treated has higher frequency
