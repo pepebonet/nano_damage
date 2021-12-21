@@ -138,7 +138,7 @@ def get_expected_damage(df, enrichment):
 
     df = num2chr(df)
     prob_all_nuc = []
-
+    
     for i, j in tqdm(df.groupby(['ID', 'strand'])):
         N = j.shape[0]
         seq = annot(j)
