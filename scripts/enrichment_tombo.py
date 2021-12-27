@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf8
 import os
+import sys
 import math
 import tombo
 import argparse
@@ -20,6 +21,7 @@ from tqdm import tqdm
 from tombo import tombo_helper, tombo_stats, resquiggle
 from tombo.tombo_stats import ModelStats, LevelStats
 
+sys.path.append('../')
 import plots as pl
 import utils as ut
 
@@ -129,45 +131,6 @@ def get_pos_info(ordered, el):
     return ordered.loc[pos1:pos2]
 
 
-def decision_adjacent(pos_info, triplet, pentamer):
-    trip_merge = pd.merge(
-        pos_info, triplet, left_on='TRIPLET', right_on='CONTEXT'
-        )
-    pent_merge = pd.merge(
-        pos_info, pentamer, left_on='PENTAMER', right_on='CONTEXT'
-        )
-    pent_merge['new_p-value'] = pent_merge['p-value'] / pent_merge['TOTAL_NORM'] / \
-        trip_merge['TOTAL_NORM']
-
-    return pos_info.loc[pent_merge['new_p-value'].idxmin() : \
-        pent_merge['new_p-value'].idxmin()]
-
-
-def filter_adjacent(df, triplet, pentamer):
-    df_out = pd.DataFrame()
-    for i, j in df.groupby('CHROM'):
-        ordered = j.sort_values(by='pos')
-        positions = ordered['pos'].tolist()
-
-        rang = ranges(positions)
-        
-        ordered = ordered.reset_index(drop=True)
-        ordered['pos_str'] = ordered['pos'].apply(str)
-
-        for el in tqdm(rang):
-            if el[0] == el[1]:
-                p = ordered[ordered['pos_str']\
-                    .str.contains(str(el[0]))].index[0]
-                selected_pos = ordered.loc[p:p]
-            else:
-                pos_info = get_pos_info(ordered, el)
-                selected_pos = decision_adjacent(pos_info, triplet, pentamer)
-
-            df_out = pd.concat([df_out, selected_pos])
-    print(df_out.shape)
-    return df_out
-
-
 #Parse tombo stats file
 def obtain_dfs(args):
     #Init tombo class depending on the type of detection method employed:
@@ -197,24 +160,6 @@ def order_df(df, control):
     return control.reset_index()
 
 
-#normalize results by the control vs control levels (Background noise)
-def normalize_by_control(df, control):
-    #First delete general norm
-    df = df.drop(['NORM_2'], axis=1)
-
-    #Order equally to substract context enrichment results
-    control = order_df(df, control)
-
-    #substract and make 0 in case the control is higher
-    df['control_norm'] = df['REF_NORM'] - control['REF_NORM']
-    df.loc[(df['control_norm'] < 0), 'control_norm'] = 0
-    df['TOTAL_NORM'] = df['control_norm'] / df['control_norm'].sum()
-
-    return df.rename(
-        columns={"REF_NORM": "No_control_norm", "control_norm": "REF_NORM"}
-    )
-
-
 #Perform multiple testing correction
 def mtc(df, alpha=0.01, method='fdr_bh'):
     _, corr, _, _ = statsmodels.stats.multitest.multipletests(
@@ -224,18 +169,6 @@ def mtc(df, alpha=0.01, method='fdr_bh'):
     df = df[df['corrected_p'] <= alpha]
     print(df.shape)
     return df
-
-
-#Extract control file and normalize treatment by it
-def extract_control_norm(args, df, out_dir, path_extension):
-    control = pd.read_csv(args.norm_control_triplet, sep='\t')
-    
-    if control.empty:
-        raise Exception('Control file is empty')
-    
-    outfile = os.path.join(out_dir, path_extension)
-
-    return normalize_by_control(df, control), outfile
 
 
 def analysis_adjacent(df):
@@ -288,6 +221,7 @@ def main(args):
     chrom_len = pd.read_csv(
         args.chrom_len, sep='\t', names=['CHROM', 'LEN']
     )
+    import pdb;pdb.set_trace()
 
     penta_ref, triplet_ref = ut.counts_reference_genome(chrom_len)
 
@@ -296,7 +230,7 @@ def main(args):
     df['SEQ'] = df.apply(ut.annot, axis = 1)
     df = df[df['p-value'] < args.pvalue]
     print(df.shape)
-    import pdb;pdb.set_trace()
+
     if args.multiple_testing:
         df = mtc(df)
 
@@ -308,32 +242,15 @@ def main(args):
 
     triplet_context = ut.get_context_norm(triplet_ref, triplet_exp)
     penta_context = ut.get_context_norm(penta_ref, penta_exp)
-    
-    if args.filters:
-        df = filter_adjacent(df, triplet_context, penta_context)
-        penta_exp = ut.get_context_counts(df, 'PENTAMER')
-        triplet_exp = ut.get_context_counts(df, 'TRIPLET')
-
-        triplet_context = ut.get_context_norm(triplet_ref, triplet_exp)
-        penta_context = ut.get_context_norm(penta_ref, penta_exp)
 
     df, sig_bases_dist = analysis_adjacent(df)
 
     out_dir = get_output_dir(args, df.shape[0])
 
-    #Use control to normalize triplet and pentamer context
-    if args.norm_control_triplet:
-        triplet_context, triplet_dir = extract_control_norm(
-            args, triplet_context, out_dir, 'triplet_norm_control'
-        )
-    elif args.norm_control_pentamer:
-        penta_context, penta_dir = extract_control_norm(
-            args, penta_context, out_dir, 'penta_norm_control'
-        )
-    else:
-        triplet_dir = os.path.join(out_dir, 'triplet')
-        penta_dir = os.path.join(out_dir, 'pentamer')
+    triplet_dir = os.path.join(out_dir, 'triplet')
+    penta_dir = os.path.join(out_dir, 'pentamer')
     import pdb;pdb.set_trace()
+
     #Obtain plots
     generate_plots(
         triplet_context, penta_context, triplet_dir, 
