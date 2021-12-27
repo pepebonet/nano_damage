@@ -26,7 +26,7 @@ names_all_3 = ['index', 'chrom', 'pos', 'base', 'strand', 'mer', 'min coverage',
 
 
 def get_contexts(df, chrom_len): 
-    penta_ref, triplet_ref = counts_reference_genome(chrom_len)
+    penta_ref, triplet_ref = ut.counts_reference_genome(chrom_len)
     
     df['PENTAMER'] = df.apply(obtain_context, args=(5,2), axis=1)
     df['TRIPLET'] = df.apply(obtain_context, args=(3,1), axis=1)
@@ -38,19 +38,6 @@ def get_contexts(df, chrom_len):
     penta_context = get_context_norm(penta_ref, penta_exp)  
 
     return df, triplet_context, penta_context 
-
-
-def counts_reference_genome(chrom_len):
-    genome = chrom_len.apply(lambda x: refseq('saccer3', x[0], 1, x[1]), axis=1)
-    
-    seq = ''
-    for el in genome:
-        seq = seq + el
-
-    penta = Counter(list(slicing_window(seq, 5)))
-    triplet = Counter(list(slicing_window(seq, 3)))
-
-    return penta, triplet
 
 
 #Otain the windows of size n of the yeast genome
