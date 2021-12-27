@@ -171,33 +171,11 @@ def mtc(df, alpha=0.01, method='fdr_bh'):
     return df
 
 
-def analysis_adjacent(df):
-    sig_bases_dist = []
-    final_df = pd.DataFrame()
-    for i, j in df.groupby('CHROM'):
-        chrom_df = j.sort_values(by='pos')
-        chrom_df['diff'] = chrom_df.pos.diff()
-
-        num = 0
-        for el in chrom_df['diff'].tolist():
-            if el == 1.0:
-                num += 1
-            elif math.isnan(el):
-                pass
-            else: 
-                sig_bases_dist.append(num)
-                num = 0
-            
-        final_df = pd.concat([final_df, chrom_df])
-    
-    return final_df, dict(Counter(sig_bases_dist))
-
-
 #Obtain plots
-def generate_plots(df_t, df_p, td, pd, sig_bases, out_dir):
+def generate_plots(df_t, df_p, td, pd, out_dir):
     pl.obtain_plots(df_t, td, 'triplet', 16)
     pl.obtain_plots(df_p, pd, 'pentamer', 256)
-    pl.significant_bases_distance(sig_bases, out_dir)
+    # pl.significant_bases_distance(sig_bases, out_dir)
 
 
 def get_output_dir(args, damage):
@@ -215,6 +193,24 @@ def get_output_dir(args, damage):
         os.makedirs(out_dir)
 
     return out_dir
+
+
+def df_for_pipeline(df):
+
+    df = df.rename(columns={'CHROM': 'chrom', 'SEQ':'base', 'p-value': 'value'})
+
+    if 'corrected_p' in df.columns:
+        df.drop(['corrected_p'], inplace=True, axis=1)
+
+    df['mer'] = df['PENTAMER']
+    df['min_coverage'] = 0
+    df['untreated_freq'] = 0
+    df['treated_freq'] = 0
+
+    df = df[['chrom', 'pos', 'base', 'strand', 'mer', 'min_coverage', \
+        'untreated_freq', 'treated_freq', 'value', 'PENTAMER', 'TRIPLET']]
+
+    return df
 
 
 def main(args):
@@ -242,8 +238,6 @@ def main(args):
     triplet_context = ut.get_context_norm(triplet_ref, triplet_exp)
     penta_context = ut.get_context_norm(penta_ref, penta_exp)
 
-    df, sig_bases_dist = analysis_adjacent(df)
-
     out_dir = get_output_dir(args, df.shape[0])
 
     triplet_dir = os.path.join(out_dir, 'triplet')
@@ -252,9 +246,11 @@ def main(args):
     #Obtain plots
     generate_plots(
         triplet_context, penta_context, triplet_dir, 
-        penta_dir, sig_bases_dist, out_dir
+        penta_dir, out_dir
         )
 
+    df = df_for_pipeline(df)
+    import pdb;pdb.set_trace()
     #write output
     ut.write_outputs(
         df, triplet_context, penta_context, out_dir, 'Nanopore'
