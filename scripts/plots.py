@@ -145,6 +145,19 @@ def plot_cosine(df, output):
     plt.close()
 
 
+def significant_bases_distance(distance, output, title=''):
+    fig, ax = plt.subplots(figsize=(5, 5))
+
+    sns.barplot(x=list(distance.keys()), y=list(distance.values()))
+    
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    # plt.title('Cisplatin', fontsize=16)
+    fig.tight_layout()
+    out_file = os.path.join(output, 'distribution.png')
+    plt.savefig(out_file)
+    plt.close()
+
 
 # ------------------------------------------------------------------------------
 # NUCLEOSOME ANALYSIS
