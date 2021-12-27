@@ -221,7 +221,6 @@ def main(args):
     chrom_len = pd.read_csv(
         args.chrom_len, sep='\t', names=['CHROM', 'LEN']
     )
-    import pdb;pdb.set_trace()
 
     penta_ref, triplet_ref = ut.counts_reference_genome(chrom_len)
 
@@ -249,7 +248,6 @@ def main(args):
 
     triplet_dir = os.path.join(out_dir, 'triplet')
     penta_dir = os.path.join(out_dir, 'pentamer')
-    import pdb;pdb.set_trace()
 
     #Obtain plots
     generate_plots(
