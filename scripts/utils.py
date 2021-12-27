@@ -46,6 +46,19 @@ def comp_seq(seq):
     return s
 
 
+def counts_reference_genome(chrom_len):
+    genome = chrom_len.apply(lambda x: refseq('saccer3', x[0], 1, x[1]), axis=1)
+    
+    seq = ''
+    for el in genome:
+        seq = seq + el
+
+    penta = Counter(list(slicing_window(seq, 5)))
+    triplet = Counter(list(slicing_window(seq, 3)))
+
+    return penta, triplet
+
+
 #Otain the windows of size n of the yeast genome
 def slicing_window(seq, n):
 
@@ -58,6 +71,34 @@ def slicing_window(seq, n):
     for elem in it:
         result = result[1:] + elem
         yield result
+
+
+
+#Obtain base for the position in the file
+def annot(df):
+    seq = refseq('saccer3', df['CHROM'], df['pos'], 1)
+    if df['strand'] == '-':
+        return base_dict[seq]
+    else:
+        return seq
+
+
+#Obtain context for every base
+def obtain_contex(df, cont, cent):
+    try:
+        seq = refseq('saccer3', df['CHROM'], df['pos'] - cent, cont)
+
+        if len(seq) < cont:
+            return '-'
+        else:
+            if df['strand'] == '-':
+                return comp_seq(seq)
+            else:
+                return seq
+
+    except:
+        seq = '-'
+    return seq
 
 
 #Intersect damage and replication through bedtools
