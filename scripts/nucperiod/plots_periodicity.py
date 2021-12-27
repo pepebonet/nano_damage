@@ -101,7 +101,7 @@ def plot_zoomout(time, snr, peak, x, y, signal, output):
     ax[0].set_xlim(-520, 520)
 
     ax[1].plot(x, y, color='#31a354', lw=1.2)
-    ax[1].set_xlim(100, 250)
+    ax[1].set_xlim(10, 250)
 
     ax[0].set_title('n = 1, SNR = {}\nMP = {}'.format(
         round(snr, 2), round(peak, 2)), fontsize=7.5)
