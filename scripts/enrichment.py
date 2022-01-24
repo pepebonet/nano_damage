@@ -91,8 +91,9 @@ def generate_plots(df_t, df_p, td, pd, out_dir):
 @click.command(short_help='Get enrichment')
 @click.option('-d', '--data', required=True)
 @click.option('-cl', '--chrom_len', required=True)
+@click.option('-bf', '--base_filter', default='')
 @click.option('-o', '--output', required=True)
-def main(data, chrom_len, output):
+def main(data, chrom_len, base_filter, output):
     df = pd.read_csv(data, sep='\t', compression='gzip')
     
     try:
@@ -104,6 +105,8 @@ def main(data, chrom_len, output):
             df.columns = names_all_3
             df.drop('motif_2 P-value', axis=1, inplace=True)
 
+    if base_filter: 
+        df = df[df['base'] == base_filter]
     
     #optional to take only those where the treated has higher frequency
     df['value'] = df['treated_freq'] - df['untreated_freq']
