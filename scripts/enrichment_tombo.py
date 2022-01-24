@@ -73,6 +73,9 @@ def parse_args():
         help='Number of bases to analyze for significance. Default = 1'
     )
     parser.add_argument(
+        '-bf', '--base_filter', default='', help='Whether to filter for a single base'
+    )
+    parser.add_argument(
         '-mt', '--multiple_testing', action='store_true', default=False,
         help='Perform multiple testing correction. Default = False'
     )
@@ -221,8 +224,11 @@ def main(args):
     penta_ref, triplet_ref = ut.counts_reference_genome(chrom_len)
 
     df = obtain_dfs(args)
-
     df['SEQ'] = df.apply(ut.annot, axis = 1)
+
+    if args.base_filter:
+        df = df[df['SEQ'] == args.base_filter]
+
     df = df[df['p-value'] < args.pvalue]
     print(df.shape)
 
