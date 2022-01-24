@@ -26,10 +26,8 @@ def load_data(triplet_mao, pentamer_mao, triplet_nanopore, pentamer_nanopore):
 
 #obtain comparison df joining mao and nanopore data
 def obtain_df(n, m):
-    
-    n = n.set_index('CONTEXT')
-    m = m.set_index('CONTEXT')
-    result = pd.concat([m, n], axis=1, join='inner')
+
+    result = pd.merge(n, m, on='CONTEXT', how='outer').fillna(0)
 
     result['Nanopore - Mao'] = result['Norm Nanopore'] - result['Norm Mao']
     
@@ -111,7 +109,7 @@ def main(mao_triplet, mao_pentamer, triplet_nanopore, pentamer_nanopore, output)
     tn, tm, pn, pm = load_data(
         mao_triplet, mao_pentamer, triplet_nanopore, pentamer_nanopore
     )
-    import pdb;pdb.set_trace()
+
     triplet, cos_sim_tri = obtain_df(tn, tm)
     pentamer, cos_sim_pent = obtain_df(pn, pm)
 
