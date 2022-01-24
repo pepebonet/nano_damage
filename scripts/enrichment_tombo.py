@@ -250,7 +250,7 @@ def main(args):
         )
 
     df = df_for_pipeline(df)
-    import pdb;pdb.set_trace()
+
     #write output
     ut.write_outputs(
         df, triplet_context, penta_context, out_dir, 'Nanopore'
