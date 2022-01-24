@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import sys
 import pandas as pd
 
+sys.path.append('../')
 import utils as ut
 
 
@@ -58,15 +60,17 @@ def do_accessibility_analysis(access_data, damage, gen_triplet_prob, output):
 
 def do_telomere_accessibility_analysis(open_damage, close_damage, 
     telomeres, access_data, gen_triplet_prob, output):
-    names_access = ['Chromosome', 'Start', 'End', 'strand', 'p-value', 
-        'SEQ', 'PENTAMER', 'TRIPLET', 'counts', 'Chromosome_tel', 'Start_tel', 
+    names_access = ['Chromosome', 'Start', 'End', 'base', 'strand', 'mer', 
+        'min_coverage','untreated_freq', 'treated_freq', 'value', 'PENTAMER', 
+        'TRIPLET', 'counts', 'Triplet', 'Pentamer', 'Chromosome_tel', 'Start_tel', 
         'End_tel', 'Overlapped']
 
     telomeres['Start'] = telomeres['Start'] - 1
     access_data = ut.chr2num(access_data)
+    
     open_tel_damage = ut.intersect(telomeres, open_damage, names_access)
     close_tel_damage = ut.intersect(telomeres, close_damage, names_access)
-
+    
     names_access_tel = ['Chromosome', 'Start', 'End', 'counts', 
         'Chromosome_2', 'Start_2', 'End_2',  'Overlapped']
 

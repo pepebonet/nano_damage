@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import pandas as pd
 from collections import Counter
 
@@ -51,13 +52,13 @@ def get_polII_damage(polii, damage, gen_triplet_prob,
     else: 
         non_trans = ut.chr2num(polii[polii['occupancy'] == 0])
 
-    names = ['Chr', 'Start', 'End', 'strand', 'stat', 'damaged_base', 
-        'PENTAMER', 'TRIPLET', 'Chromosome_t', 
-        'Start_t', 'End_t', 'occupancy', 'Overlapped']
+    names = ['Chr', 'Start', 'End', 'base', 'strand', 'mer', 'min_coverage',
+        'untreated_freq', 'treated_freq', 'value', 'PENTAMER', 'TRIPLET', 
+        'Chromosome_t', 'Start_t', 'End_t', 'occupancy', 'Overlapped']
 
     damage_trans = ut.intersect(trans, damage, names)
     damage_non_trans = ut.intersect(non_trans, damage, names)
-
+    
     trans_pent, trans_tri = get_context_polII(trans)
     non_trans_pent, non_trans_tri = get_context_polII(non_trans)
 
@@ -88,3 +89,7 @@ def select_polii_analysis(polii_occupancy, polii_type, damage, gen_triplet_prob,
         polii, damage, gen_triplet_prob, output, tri_counts, pent_counts, 
         polii_type
     )
+
+
+if __name__ == '__main__':
+    pass

@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 import os
+import sys
 import click
 import numpy as np
 import pandas as pd
 
+sys.path.append('/home/jbonet/Desktop/nano_damage/scripts/')
 import plots as pl
+
 import polii_analysis as pa
 import origin_analysis as oa
 import telomere_analysis as ta
 import genomewide_analysis as ga
 import accessibility_analysis as aa
+
+
 
 
 def get_data(damage, replication_origins, ndr, accessibility):
@@ -55,6 +60,7 @@ def get_mappable_damage(mappability, damage):
     damage_map = pd.merge(
         damage, map_data, how='inner', on=['Chromosome', 'pos']
     )
+    
     return damage_map[damage_map['mappability'] > 0].drop(
         columns=['mappability'])
 
@@ -139,6 +145,7 @@ def main(significant_damage, replication_origins, nucleosome_depleated,
     open_damage, close_damage, cosine_open, cosine_close = aa.do_accessibility_analysis(
         access_data, damage, gen_triplet_prob, output
     )
+
     #Damage in open and close telomeres
     open_tel_damage, close_tel_damage = aa.do_telomere_accessibility_analysis(
         open_damage, close_damage, telomeres, access_data, gen_triplet_prob, output

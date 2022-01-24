@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import sys
 import pandas as pd
 
+sys.path.append('../')
 import utils as ut
 
 
@@ -10,9 +12,10 @@ def get_origins_damaged(damage, replication):
     replication_bed = ut.chr2num(replication.copy())
     names_replication = ['Chromosome_Or', 
         'Start_Or', 'End_Or', 'ACS', 'Strand_Or', 'Class', 'Timing', 'IGR', 
-        'WT G1 NDR (bp )', 'rpd3 G1 NDR (bp )', 'Chr', 'Start', 'End', 'strand', 
-        'stat', 'damaged_base', 'PENTAMER', 'TRIPLET', 'Overlapped']
-
+        'WT G1 NDR (bp )', 'rpd3 G1 NDR (bp )', 'Chr', 'Start', 'End', 'base',
+        'strand', 'mer', 'min_coverage', 'untreated_freq', 'treated_freq',
+        'value', 'PENTAMER', 'TRIPLET', 'Overlapped']
+    
     df = ut.intersect(damage_bed, replication_bed, names_replication)
     return df, replication_bed
 
@@ -27,6 +30,7 @@ def get_expected_origins(intersect, rep, ndr, gen_triplet_prob, output):
             label = 'obs_exp_origins_{}'.format(i)
             enrich = 'origins_{}'.format(i)
             pent, tri, or_prop_bases = ut.counts_segment(rep[rep['Timing'] == i])
+        
         ut.get_expected(df, gen_triplet_prob, tri, output, label)
         _, _ = ut.pre_enrichment_step(df, tri, pent, output, enrich)
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+import sys
 import pandas as pd
 import bottleneck as bn
 
+sys.path.append('../')
 import utils as ut
 
 def add_dam_se(df):
