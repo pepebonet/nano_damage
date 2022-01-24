@@ -3,6 +3,7 @@ outputs/*
 scripts/__pycache__
 scripts/miscellaneous/__pycache__
 scripts/nucperiod/__pycache__
+scripts/structure_analysis/__pycache__
 access_token/*
 *tsv
 *pdf
