@@ -127,7 +127,7 @@ def intersect(damage, transcription):
 
     return df
         
-#TODO check with negative strand
+
 def get_expected(df):
     df = num2chr(df)
     genome = df.apply(
@@ -151,13 +151,10 @@ def get_expected(df):
     
     total_Gs = []
     for el in my:
-        # total_Gs.append(Counter(el)['G'])
-        if Counter(el)['G'] < 40:
-            total_Gs.append(500)
-        else:
-            total_Gs.append(Counter(el)['G'])
-            # import pdb;pdb.set_trace()
-    
+        total_Gs.append(Counter(el)['G'])
+        # if Counter(el)['G'] < 40:
+        #     total_Gs.append(500)
+
     Gs = pd.DataFrame([range(-649, 651), total_Gs]).T
     Gs.columns = ['Relative Position', 'Normalizing Counts']
 
@@ -180,7 +177,7 @@ def get_df_positions(df, expected, flagT, flagS):
             df['Relative Position'] = df['pos'] - \
                 df['Transcript start (bp)'].astype(int)
     
-    
+
     rel_pos = df.groupby('Relative Position').apply(
         lambda x: x.shape[0]).reset_index()
 
@@ -267,9 +264,6 @@ def main(damaged_positions, transcription_sites, output):
     do_plots(rel_neg_tss, output, 'tss', 'neg')
     do_plots(rel_neg_tts, output, 'tts', 'neg')
     
-    
-
-
 
 if __name__ == '__main__':
     main()
