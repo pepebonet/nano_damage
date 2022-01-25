@@ -3,8 +3,12 @@
 import os 
 import click 
 import pybedtools
+import numpy as np
 import pandas as pd
+from bgreference import refseq
 import matplotlib.pyplot as plt
+from collections import Counter
+
 
 chr_dict = {'chrI': 1, 'chrII': 2, 'chrIII': 3, 'chrIV': 4, 'chrV': 5, 
     'chrVI': 6, 'chrVII': 7, 'chrVIII': 8, 'chrIX': 9, 'chrX': 10, 'chrXI': 11, 
@@ -34,8 +38,22 @@ def chr2num2(df):
     return df
 
 
+def num2chr(df):
+    df['CHROM'] = df.CHROM.apply(lambda x : find_chr(x))
+    return df
+
+
+def find_chr(x):
+    for k, v in chr_dict.items():
+        if v == x: 
+            return k
+
+
 def get_damage(damage):
     df = pd.read_csv(damage, sep='\t')
+
+    df = df[df['base'] == 'G']
+
     df['Start'] = df['pos'] - 1
     df['End'] = df['pos']
     df = df.rename(columns={'chrom': 'CHROM'})
@@ -100,6 +118,20 @@ def intersect(damage, transcription):
     df = df[df['Overlap'] == 1]
 
     return df
+        
+
+def get_expected(df):
+    df = num2chr(df)
+    genome = df.apply(
+        lambda x: refseq('saccer3', x[0], x[1], x[2] - x[1]), axis=1
+    )
+
+    total_Gs = []
+    for el in np.asarray(genome).T:
+        total_Gs.append(Counter(el)['G'])
+
+    return total_Gs
+        
 
 
 def get_df_positions(df, flagT, flagS):
@@ -115,6 +147,7 @@ def get_df_positions(df, flagT, flagS):
             df['Relative Position'] = df['pos'] - \
                 df['Transcript start (bp)'].astype(int)
     
+    # expected = get_expected(df)
     #TODO Assuming random probability of damage (Maybe the expected needs to improve)
     expected = df.shape[0] / 1300
     rel_pos = df.groupby('Relative Position').apply(
@@ -172,8 +205,15 @@ def main(damaged_positions, transcription_sites, output):
     pos_damage, neg_damage = get_damage(damaged_positions)
     
     transcription = pd.read_csv(transcription_sites, sep='\t')
+    transcription = transcription[~transcription['Gene name'].isnull()]
+    
     pos_tss, neg_tss = get_transcription(transcription, 'tss')
     pos_tts, neg_tts = get_transcription(transcription, 'tts')
+
+    exp_pos_tss = get_expected(pos_tss)
+    exp_pos_tts = get_expected(pos_tts)
+    exp_neg_tss = get_expected(neg_tss)
+    exp_neg_tts = get_expected(neg_tts)
 
     in_pos_tss = intersect(pos_damage, pos_tss)
     in_pos_tts = intersect(pos_damage, pos_tts)
