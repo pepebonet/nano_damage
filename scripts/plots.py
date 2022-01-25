@@ -111,10 +111,19 @@ def obs_exp_multi_plots(data, output, label=''):
 def plot_cosine(df, output):
     fig, ax = plt.subplots(figsize=(7, 4))
     
+    df_triplet = df[df['Context'] == 'Triplet']
+    df_penta = df[df['Context'] == 'Pentamer']
+
     plt.errorbar(
-        df['DNA structure'], df['Cosine-similarity'], ls='none',
-        marker='o', mfc='#08519c', mec='black', ms=10, mew=1, 
+        df_triplet['DNA structure'], df_triplet['Cosine-similarity'], 
+        ls='none', marker='o', mfc='#08519c', mec='black', ms=10, mew=1, 
         ecolor='#08519c', capsize=2.5, elinewidth=0.7, capthick=0.7
+    )
+
+    plt.errorbar(
+        df_penta['DNA structure'], df_penta['Cosine-similarity'], 
+        ls='none', marker='o', mfc='#de971d', mec='black', ms=10, mew=1, 
+        ecolor='#de971d', capsize=2.5, elinewidth=0.7, capthick=0.7
     )
 
     plt.ylim(0, 1.1)

@@ -44,7 +44,8 @@ def get_telemores_damaged(chrom_info, damage):
     return ut.intersect(damage, telomeres, names_tel), telomeres
 
 
-def do_telomere_analysis(chrom_info, damage, gen_triplet_prob, output):
+def do_telomere_analysis(chrom_info, damage, gen_triplet_prob, 
+    gen_penta_prob, output):
     tel_intersect, telomeres = get_telemores_damaged(chrom_info, damage)
     
     tel_chr = ut.num2chr(telomeres.copy())
@@ -57,8 +58,13 @@ def do_telomere_analysis(chrom_info, damage, gen_triplet_prob, output):
     )
 
     triplet_telomeres = ut.get_context_norm(tel_tri, triplet_exp)
-    cosine_tel = ut.calc_cosine_sim(
-        gen_triplet_prob, triplet_telomeres, output, 'Subtelomeric'
+    cosine_tel_tri = ut.calc_cosine_sim(
+        gen_triplet_prob, triplet_telomeres, 'Triplet', 'Subtelomeric'
+    )
+
+    penta_telomeres = ut.get_context_norm(tel_pent, penta_exp)
+    cosine_tel_pent = ut.calc_cosine_sim(
+        gen_penta_prob, penta_telomeres, 'Pentamer', 'Subtelomeric'
     )
 
     damage_random_subset = damage.sample(n=tel_intersect.shape[0])
@@ -66,10 +72,11 @@ def do_telomere_analysis(chrom_info, damage, gen_triplet_prob, output):
         damage_random_subset, tel_tri, tel_pent, output, label='telomere'
     )
 
-    return telomeres, tel_intersect, cosine_tel
+    return telomeres, tel_intersect, cosine_tel_tri, cosine_tel_pent
 
 
-def do_non_telomere_analysis(chrom_info, damage, gen_triplet_prob, output):
+def do_non_telomere_analysis(chrom_info, damage, gen_triplet_prob, 
+    gen_penta_prob, output):
     non_tel_intersect, non_telomeres = get_non_telemores_damaged(
         chrom_info, damage
     )
@@ -84,8 +91,13 @@ def do_non_telomere_analysis(chrom_info, damage, gen_triplet_prob, output):
     )
 
     triplet_non_telomeres = ut.get_context_norm(non_tel_tri, triplet_exp)
-    cosine_non_tel = ut.calc_cosine_sim(
-        gen_triplet_prob, triplet_non_telomeres, output, 'Non subtelomeric'
+    cosine_non_tel_tri = ut.calc_cosine_sim(
+        gen_triplet_prob, triplet_non_telomeres, 'Triplet', 'Non subtelomeric'
     )
 
-    return cosine_non_tel
+    penta_non_telomeres = ut.get_context_norm(non_tel_pent, penta_exp)
+    cosine_non_tel_pent = ut.calc_cosine_sim(
+        gen_penta_prob, penta_non_telomeres, 'Pentamer', 'Non subtelomeric'
+    )
+
+    return cosine_non_tel_tri, cosine_non_tel_pent

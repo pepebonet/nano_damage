@@ -36,7 +36,7 @@ def get_expected_origins(intersect, rep, ndr, gen_triplet_prob, output):
 
 
 def do_origin_analysis(damage, replication, only_or, ndr, 
-    gen_triplet_prob, output):
+    gen_triplet_prob, gen_penta_prob, output):
     or_intersect, replications = get_origins_damaged(damage, replication)
 
     or_pent, or_tri, or_prop_bases = ut.counts_segment(replication)
@@ -47,10 +47,15 @@ def do_origin_analysis(damage, replication, only_or, ndr,
     )
 
     triplet_origins = ut.get_context_norm(or_tri, triplet_exp)
-    cosine_rep_or = ut.calc_cosine_sim(
-        gen_triplet_prob, triplet_origins, output, 'Replication Origins'
+    cosine_tri_or = ut.calc_cosine_sim(
+        gen_triplet_prob, triplet_origins, 'Triplet', 'Replication Origins'
+    )
+
+    penta_origins = ut.get_context_norm(or_pent, penta_exp)
+    cosine_pent_or = ut.calc_cosine_sim(
+        gen_penta_prob, penta_origins, 'Pentamer', 'Replication Origins'
     )
     
     get_expected_origins(or_intersect, only_or, ndr, gen_triplet_prob, output)
 
-    return cosine_rep_or
+    return cosine_tri_or, cosine_pent_or

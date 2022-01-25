@@ -19,7 +19,8 @@ def get_open_close_damage(open_pos, close_pos, damage):
     return open_damage, close_damage
 
 
-def do_accessibility_analysis(access_data, damage, gen_triplet_prob, output):
+def do_accessibility_analysis(access_data, damage, gen_triplet_prob, 
+    gen_penta_prob, output):
     open_pos = access_data[access_data['counts'] > 0].reset_index(drop=True)
     close_pos = access_data[access_data['counts'] <= 0].reset_index(drop=True)
     
@@ -37,25 +38,36 @@ def do_accessibility_analysis(access_data, damage, gen_triplet_prob, output):
         close_damage, gen_triplet_prob, close_tri, output, label='obs_exp_close'
     )
 
-    triplet_exp_open, penta_exp = ut.pre_enrichment_step(
+    triplet_exp_open, penta_exp_open = ut.pre_enrichment_step(
         open_damage, open_tri, open_pent, output, label='open'
     )
 
     triplet_open = ut.get_context_norm(open_tri, triplet_exp_open)
-    cosine_open = ut.calc_cosine_sim(
-        gen_triplet_prob, triplet_open, output, 'Open chromatin'
+    cosine_open_tri = ut.calc_cosine_sim(
+        gen_triplet_prob, triplet_open, 'Triplet', 'Open chromatin'
     )
 
-    triplet_exp_close, penta_exp = ut.pre_enrichment_step(
+    penta_open = ut.get_context_norm(open_pent, penta_exp_open)
+    cosine_open_pent = ut.calc_cosine_sim(
+        gen_penta_prob, penta_open, 'Pentamer', 'Open chromatin'
+    )
+
+    triplet_exp_close, penta_exp_close = ut.pre_enrichment_step(
         close_damage, close_tri, close_pent, output, label='close'
     )
 
     triplet_close = ut.get_context_norm(close_tri, triplet_exp_close)
-    cosine_close = ut.calc_cosine_sim(
-        gen_triplet_prob, triplet_close, output, 'Close chromatin'
+    cosine_close_tri = ut.calc_cosine_sim(
+        gen_triplet_prob, triplet_close, 'Triplet', 'Close chromatin'
     )
 
-    return open_damage, close_damage, cosine_open, cosine_close
+    penta_close = ut.get_context_norm(close_pent, penta_exp_close)
+    cosine_close_pent = ut.calc_cosine_sim(
+        gen_penta_prob, penta_close, 'Pentamer', 'Close chromatin'
+    )
+
+    return open_damage, close_damage, cosine_open_tri, cosine_close_tri, \
+        cosine_open_pent, cosine_close_pent
 
 
 def do_telomere_accessibility_analysis(open_damage, close_damage, 

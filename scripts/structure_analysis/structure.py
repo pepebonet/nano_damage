@@ -15,8 +15,6 @@ import genomewide_analysis as ga
 import accessibility_analysis as aa
 
 
-
-
 def get_data(damage, replication_origins, ndr, accessibility):
     replication_data = pd.read_csv(
         replication_origins, sep ='\t').drop(columns=['Origin']
@@ -120,16 +118,19 @@ def main(significant_damage, replication_origins, nucleosome_depleated,
     
 
     #genome
-    gen_triplet_prob, chrom_info, damage, tri_counts, pent_counts = \
-        ga.do_genomewise_analysis(chrom_len, damage, output)
+    gen_triplet_prob, chrom_info, damage, tri_counts, pent_counts, \
+        gen_penta_prob = ga.do_genomewise_analysis(
+            chrom_len, damage, output)
     #Origins and timing 
-    cosine_rep_or = oa.do_origin_analysis(
-        damage, replication, rep, ndr, gen_triplet_prob, output
+    cosine_tri_or, cosine_pent_or = oa.do_origin_analysis(
+        damage, replication, rep, ndr, gen_triplet_prob, gen_penta_prob,
+        output
     )
-
+    
     #telomeres
-    telomeres, tel_intersect, cosine_tel = ta.do_telomere_analysis(
-        chrom_info, damage, gen_triplet_prob, output
+    telomeres, tel_intersect, cosine_tel_tri, cosine_tel_pent \
+        = ta.do_telomere_analysis(
+        chrom_info, damage, gen_triplet_prob, gen_penta_prob, output
     )
     #polII
     if polii_occupancy:
@@ -138,12 +139,14 @@ def main(significant_damage, replication_origins, nucleosome_depleated,
             tri_counts, pent_counts
         )
     #non telomeres
-    cosine_non_tel = ta.do_non_telomere_analysis(
-        chrom_info, damage, gen_triplet_prob, output
+    cosine_non_tel_tri, cosine_non_tel_pent = ta.do_non_telomere_analysis(
+        chrom_info, damage, gen_triplet_prob, gen_penta_prob, output
     )
+
     # accessibility
-    open_damage, close_damage, cosine_open, cosine_close = aa.do_accessibility_analysis(
-        access_data, damage, gen_triplet_prob, output
+    open_damage, close_damage, cosine_open_tri, cosine_close_tri, cosine_open_pent,  \
+        cosine_close_pent = aa.do_accessibility_analysis(
+        access_data, damage, gen_triplet_prob, gen_penta_prob, output
     )
 
     #Damage in open and close telomeres
@@ -151,10 +154,12 @@ def main(significant_damage, replication_origins, nucleosome_depleated,
         open_damage, close_damage, telomeres, access_data, gen_triplet_prob, output
     )
 
-
     cosine = pd.concat(
-        [cosine_rep_or, cosine_tel, cosine_non_tel, cosine_open, cosine_close]
+        [cosine_tri_or, cosine_pent_or, cosine_tel_tri, cosine_tel_pent, 
+        cosine_non_tel_tri, cosine_non_tel_pent, cosine_open_tri, cosine_close_tri,
+        cosine_open_pent, cosine_close_pent]
     )
+    import pdb;pdb.set_trace()
     pl.plot_cosine(cosine, output)
     print('All done!')
 

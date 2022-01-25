@@ -34,5 +34,7 @@ def do_genomewise_analysis(chrom_len, damage, output):
         damage, genome_tri, genome_pent, output, label='genome'
     )
     gen_triplet_prob = ut.get_context_norm(genome_tri, triplet_exp)
+    gen_penta_prob = ut.get_context_norm(genome_pent, penta_exp)
 
-    return gen_triplet_prob, chrom_info, damage, genome_tri, genome_pent
+    return gen_triplet_prob, chrom_info, damage, genome_tri, genome_pent, \
+        gen_penta_prob

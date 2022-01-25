@@ -143,14 +143,14 @@ def generate_plots(df_t, df_p, td, pd):
     pl.obtain_plots(df_p, pd, 'pentamer', 256)
 
 
-def calc_cosine_sim(genome, subset, output, label):
+def calc_cosine_sim(genome, subset, tripent, label):
     
     df = pd.merge(genome, subset, on='CONTEXT', how='outer').fillna(0)
     score = cosine_similarity(df['TOTAL_NORM_x'].values.reshape(1, -1), 
         df['TOTAL_NORM_y'].values.reshape(1, -1))[0][0]
     
-    df_score = pd.DataFrame([[score, label]], 
-        columns=['Cosine-similarity', 'DNA structure'])
+    df_score = pd.DataFrame([[score, label, tripent]], 
+        columns=['Cosine-similarity', 'DNA structure', 'Context'])
     
     return df_score
 
