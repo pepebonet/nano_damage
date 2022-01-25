@@ -119,22 +119,37 @@ def intersect(damage, transcription):
 
     return df
         
-
+#TODO check with negative strand
 def get_expected(df):
     df = num2chr(df)
     genome = df.apply(
         lambda x: refseq('saccer3', x[0], x[1], x[2] - x[1]), axis=1
     )
-
+    
+    aa = list(genome)
+    my = np.empty([1300, len(genome)], dtype='O')
+    for i in range(len(genome)):
+        try:
+            my[:,i] = list(aa[i])
+        except:
+            print(len(aa[i]))
+    
     total_Gs = []
-    for el in np.asarray(genome).T:
+    for el in my:
         total_Gs.append(Counter(el)['G'])
+        if Counter(el)['G'] < 40:
+            import pdb;pdb.set_trace()
+    
+    Gs = pd.DataFrame([range(-649, 651), total_Gs]).T
+    Gs.columns = ['Relative Position', 'Normalizing Counts']
 
-    return total_Gs
+    df = chr2num(df)
+      
+    return Gs
         
 
 
-def get_df_positions(df, flagT, flagS):
+def get_df_positions(df, expected, flagT, flagS):
 
     if flagT == 'tss':
         df['Relative Position'] = df['pos'] - \
@@ -147,22 +162,26 @@ def get_df_positions(df, flagT, flagS):
             df['Relative Position'] = df['pos'] - \
                 df['Transcript start (bp)'].astype(int)
     
-    # expected = get_expected(df)
     #TODO Assuming random probability of damage (Maybe the expected needs to improve)
-    expected = df.shape[0] / 1300
+    # expected = df.shape[0] / 1300
     rel_pos = df.groupby('Relative Position').apply(
-            lambda x: (x.shape[0] - expected) / df.shape[0]).reset_index()
+        lambda x: x.shape[0]).reset_index()
 
-    return df, rel_pos
+    norm =  pd.merge(rel_pos, expected, on='Relative Position', how='outer').fillna(0)
+
+    norm['Normalized Counts'] = norm[0] / norm['Normalizing Counts']
+    import pdb;pdb.set_trace()
+    norm.sort_values(by='Relative Position')
+    return df, norm
 
 
 def do_plots(df, output, flagT, flagS):
 
     fig, ax = plt.subplots(figsize=(10, 5))
-
+    import pdb;pdb.set_trace()
     custom_lines = []
     
-    plt.plot(df['Relative Position'], df[0], 
+    plt.plot(df['Relative Position'], df['Normalized Counts'], 
         color='#16416e', alpha=1, label='Negative Mao')
 
     ax.spines['top'].set_visible(False)
@@ -221,11 +240,10 @@ def main(damaged_positions, transcription_sites, output):
     in_neg_tss = intersect(neg_damage, neg_tss)
     in_neg_tts = intersect(neg_damage, neg_tts)
 
-
-    df_pos_tss, rel_pos_tss = get_df_positions(in_pos_tss, 'tss', 'pos')
-    df_pos_tts, rel_pos_tts = get_df_positions(in_pos_tts, 'tts', 'pos')
-    df_neg_tss, rel_neg_tss = get_df_positions(in_neg_tss, 'tss', 'neg')
-    df_neg_tts, rel_neg_tts = get_df_positions(in_neg_tts, 'tts', 'neg')
+    df_pos_tss, rel_pos_tss = get_df_positions(in_pos_tss, exp_pos_tss, 'tss', 'pos')
+    df_pos_tts, rel_pos_tts = get_df_positions(in_pos_tts, exp_pos_tts, 'tts', 'pos')
+    df_neg_tss, rel_neg_tss = get_df_positions(in_neg_tss, exp_neg_tss, 'tss', 'neg')
+    df_neg_tts, rel_neg_tts = get_df_positions(in_neg_tts, exp_neg_tts, 'tts', 'neg')
 
     do_plots(rel_pos_tss, output, 'tss', 'pos')
     do_plots(rel_pos_tts, output, 'tts', 'pos')
