@@ -18,26 +18,34 @@ def get_base_percentage(df):
     return new_df
 
 
-def load_data(plus_s, minus_s, chrom_len): 
+def load_data(plus_s, minus_s, chrom_len):
 
-    B_p = pd.read_csv(plus_s, sep='\t', \
-        names=['CHROM', 'P0', 'pos', 'ID', 'READS'])
-    B_p['strand'] = '+'
-    B_m = pd.read_csv(minus_s, sep='\t', \
-        names=['CHROM', 'P0', 'pos', 'ID', 'READS'])
-    B_m['strand'] = '-'
-    B = pd.concat([B_p, B_m])
+    B_p_all = pd.DataFrame()
+    for el in plus_s:
+        B_p = pd.read_csv(el, sep='\t', \
+            names=['CHROM', 'P0', 'pos', 'ID', 'READS'])
+        B_p['strand'] = '+'
+        B_p_all = pd.concat([B_p_all, B_p])
+    
+    B_m_all = pd.DataFrame()
+    for el in minus_s:
+        B_m = pd.read_csv(el, sep='\t', \
+            names=['CHROM', 'P0', 'pos', 'ID', 'READS'])
+        B_m['strand'] = '-'
+        B_m_all = pd.concat([B_m_all, B_p])
+
+    B = pd.concat([B_p_all, B_m_all])
 
     chrom_len = pd.read_csv(
         chrom_len, sep='\t', names=['CHROM', 'LEN']
     )
-
+    
     return B, chrom_len
 
 
 @click.command(short_help='Get data from Mao experiment')
-@click.option('-ms', '--minus_strand', required=True)
-@click.option('-ps', '--plus_strand', required=True)
+@click.option('-ms', '--minus_strand', required=True, multiple=True)
+@click.option('-ps', '--plus_strand', required=True, multiple=True)
 @click.option('-cl', '--chrom_len', required=True)
 @click.option('-o', '--output', required=True)
 def main(minus_strand, plus_strand, chrom_len, output):
@@ -46,9 +54,9 @@ def main(minus_strand, plus_strand, chrom_len, output):
 
     penta_ref, triplet_ref = ut.counts_reference_genome(chrom_len)
 
-    df['SEQ'] = df.apply(ut.annot, axis = 1)
-
     df = get_base_percentage(df)
+    
+    df['SEQ'] = df.apply(ut.annot, axis = 1)
 
     df['PENTAMER'] = df.apply(ut.obtain_contex, args=(5,2), axis=1)
     df['TRIPLET'] = df.apply(ut.obtain_contex, args=(3,1), axis=1)
@@ -70,8 +78,6 @@ def main(minus_strand, plus_strand, chrom_len, output):
         df, triplet_context, penta_context, output, 'Nanopore'
     )
     
-    
-
 
 if __name__ == '__main__':
     main()
