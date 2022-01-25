@@ -20,6 +20,7 @@ chr_dict2 = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,
     'XII': 12, 'XIII': 13, 'XIV': 14, 'XV': 15, 'XVI': 16, 
     'M': 17, 'Mito' : 17}
 
+base_dict = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G'}
 
 # import plots as pl
 
@@ -47,6 +48,13 @@ def find_chr(x):
     for k, v in chr_dict.items():
         if v == x: 
             return k
+
+
+def comp_seq(seq):
+    s = ''
+    for el in seq:
+        s = base_dict[el] + s
+    return s
 
 
 def get_damage(damage):
@@ -126,6 +134,13 @@ def get_expected(df):
         lambda x: refseq('saccer3', x[0], x[1], x[2] - x[1]), axis=1
     )
     
+    all_seqs = []
+    for seq in genome:
+        if df['Strand'].unique()[0] == -1:
+            all_seqs.append(comp_seq(seq))
+        else:
+            all_seqs.append(seq)
+    
     aa = list(genome)
     my = np.empty([1300, len(genome)], dtype='O')
     for i in range(len(genome)):
@@ -136,9 +151,12 @@ def get_expected(df):
     
     total_Gs = []
     for el in my:
-        total_Gs.append(Counter(el)['G'])
+        # total_Gs.append(Counter(el)['G'])
         if Counter(el)['G'] < 40:
-            import pdb;pdb.set_trace()
+            total_Gs.append(500)
+        else:
+            total_Gs.append(Counter(el)['G'])
+            # import pdb;pdb.set_trace()
     
     Gs = pd.DataFrame([range(-649, 651), total_Gs]).T
     Gs.columns = ['Relative Position', 'Normalizing Counts']
@@ -162,23 +180,22 @@ def get_df_positions(df, expected, flagT, flagS):
             df['Relative Position'] = df['pos'] - \
                 df['Transcript start (bp)'].astype(int)
     
-    #TODO Assuming random probability of damage (Maybe the expected needs to improve)
-    # expected = df.shape[0] / 1300
+    
     rel_pos = df.groupby('Relative Position').apply(
         lambda x: x.shape[0]).reset_index()
 
     norm =  pd.merge(rel_pos, expected, on='Relative Position', how='outer').fillna(0)
 
     norm['Normalized Counts'] = norm[0] / norm['Normalizing Counts']
-    import pdb;pdb.set_trace()
-    norm.sort_values(by='Relative Position')
+    norm = norm.sort_values(by='Relative Position')
+
     return df, norm
 
 
 def do_plots(df, output, flagT, flagS):
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    import pdb;pdb.set_trace()
+
     custom_lines = []
     
     plt.plot(df['Relative Position'], df['Normalized Counts'], 
@@ -206,7 +223,7 @@ def do_plots(df, output, flagT, flagS):
     plt.close()
 
 
-# TODO <JB> maybe needs to work only on 1 nucleotide
+
 @click.command(short_help='Analyse trancription sites')
 @click.option(
     '-dp', '--damaged-positions', required=True, 
@@ -250,7 +267,7 @@ def main(damaged_positions, transcription_sites, output):
     do_plots(rel_neg_tss, output, 'tss', 'neg')
     do_plots(rel_neg_tts, output, 'tts', 'neg')
     
-    # import pdb;pdb.set_trace()
+    
 
 
 
