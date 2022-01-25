@@ -86,12 +86,12 @@ def do_plots(df, cos_sim, output, label):
         transform=ax.transAxes, fontsize=14)
 
     ax.legend(
-        bbox_to_anchor=(0., 0.9, 1., .102),
+        bbox_to_anchor=(0., 1.0, 1., .102),
         handles=custom_lines, loc='upper right', 
         facecolor='white', ncol=1, fontsize=10, frameon=False
     )
 
-    out_file = os.path.join(output, 'comp_mao_nanopore_{}.png'.format(label))
+    out_file = os.path.join(output, 'comp_mao_nanopore_{}.pdf'.format(label))
     fig.tight_layout()
     plt.savefig(out_file)
     plt.close()
