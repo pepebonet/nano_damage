@@ -114,7 +114,7 @@ def plot_cosine(df, output):
     df_triplet = df[df['Context'] == 'Triplet']
     df_penta = df[df['Context'] == 'Pentamer']
     x = list(range(len(df_triplet['DNA structure'])))
-    import pdb;pdb.set_trace()
+    
     plt.errorbar(
         [a + 0.1 for a in x], df_triplet['Cosine-similarity'], 
         ls='none', marker='o', mfc='#08519c', mec='black', ms=10, mew=1, 
