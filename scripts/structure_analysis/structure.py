@@ -132,6 +132,7 @@ def main(significant_damage, replication_origins, nucleosome_depleated,
         = ta.do_telomere_analysis(
         chrom_info, damage, gen_triplet_prob, gen_penta_prob, output
     )
+    
     #polII
     if polii_occupancy:
         pa.select_polii_analysis(
@@ -159,7 +160,10 @@ def main(significant_damage, replication_origins, nucleosome_depleated,
         cosine_non_tel_tri, cosine_non_tel_pent, cosine_open_tri, cosine_close_tri,
         cosine_open_pent, cosine_close_pent]
     )
-    import pdb;pdb.set_trace()
+
+    cos_out = os.path.join(output, 'cosine_structure.tsv')
+    cosine.to_csv(cos_out, sep='\t', index=None)
+
     pl.plot_cosine(cosine, output)
     print('All done!')
 

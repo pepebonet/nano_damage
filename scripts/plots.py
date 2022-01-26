@@ -113,29 +113,37 @@ def plot_cosine(df, output):
     
     df_triplet = df[df['Context'] == 'Triplet']
     df_penta = df[df['Context'] == 'Pentamer']
-
+    x = list(range(len(df_triplet['DNA structure'])))
+    import pdb;pdb.set_trace()
     plt.errorbar(
-        df_triplet['DNA structure'], df_triplet['Cosine-similarity'], 
+        [a + 0.1 for a in x], df_triplet['Cosine-similarity'], 
         ls='none', marker='o', mfc='#08519c', mec='black', ms=10, mew=1, 
         ecolor='#08519c', capsize=2.5, elinewidth=0.7, capthick=0.7
     )
 
     plt.errorbar(
-        df_penta['DNA structure'], df_penta['Cosine-similarity'], 
+        [a - 0.1 for a in x], df_penta['Cosine-similarity'], 
         ls='none', marker='o', mfc='#de971d', mec='black', ms=10, mew=1, 
         ecolor='#de971d', capsize=2.5, elinewidth=0.7, capthick=0.7
     )
 
-    plt.ylim(0, 1.1)
+    custom_lines = []
+    for el in [('Triplet', '#08519c'), ('Pentamer', '#de971d')]:
+        custom_lines.append(
+            plt.plot([],[], marker="o", ms=8, ls="", mec='black', 
+            mew=0, color=el[1], label=el[0])[0] 
+        )
+
+    plt.ylim(round(df['Cosine-similarity'].min() - 0.04, 2), 1.03)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    ax.set_xlabel("Genomic regions", fontsize=14)
-    ax.set_ylabel("Cosine similarity", fontsize=14)
-
+    ax.set_xlabel("Genomic regions", fontsize=12)
+    ax.set_ylabel("Cosine similarity", fontsize=12)
+    ax.set_xticklabels([''] + df_penta['DNA structure'].tolist())
     from matplotlib.offsetbox import AnchoredText
     from mpl_toolkits.axes_grid1 import make_axes_locatable
-    title_text = 'Genomic regions similarity'
+    title_text = 'Similarity on Genomic Regions'
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("top", size="7.5%", pad=0)
@@ -147,6 +155,12 @@ def plot_cosine(df, output):
             prop=dict(backgroundcolor='#c7cbd4',
                     size=8, color='black'))
     cax.add_artist(at)
+
+    ax.legend(
+        bbox_to_anchor=(0., 0.2, 1.0, .102),
+        handles=custom_lines, loc='upper right', 
+        facecolor='white', ncol=1, fontsize=10, frameon=False
+    )
 
     fig.tight_layout()
     out_file = os.path.join(output, 'cosine_similarity.pdf')
