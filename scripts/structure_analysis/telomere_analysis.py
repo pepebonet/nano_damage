@@ -47,7 +47,7 @@ def get_telemores_damaged(chrom_info, damage):
 def do_telomere_analysis(chrom_info, damage, gen_triplet_prob, 
     gen_penta_prob, output):
     tel_intersect, telomeres = get_telemores_damaged(chrom_info, damage)
-    
+
     tel_chr = ut.num2chr(telomeres.copy())
     tel_pent, tel_tri, tel_prop_bases = ut.counts_segment(tel_chr)
     ut.get_expected(
@@ -69,7 +69,8 @@ def do_telomere_analysis(chrom_info, damage, gen_triplet_prob,
 
     damage_random_subset = damage.sample(n=tel_intersect.shape[0])
     _, _ = ut.pre_enrichment_step(
-        damage_random_subset, tel_tri, tel_pent, output, label='telomere'
+        damage_random_subset, tel_tri, tel_pent, output, 
+        label='random_damage_in_telomere'
     )
 
     return telomeres, tel_intersect, cosine_tel_tri, cosine_tel_pent
