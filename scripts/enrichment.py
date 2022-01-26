@@ -121,8 +121,8 @@ def main(data, chrom_len, base_filter, output):
 
     df, triplet_context, penta_context = get_contexts(df, chrom_lens)
     
-    triplet_dir = os.path.join(output, 'triplet')
-    penta_dir = os.path.join(output, 'pentamer')
+    triplet_dir = os.path.join(output, 'triplet.pdf')
+    penta_dir = os.path.join(output, 'pentamer.pdf')
     
     generate_plots(
         triplet_context, penta_context, triplet_dir, 

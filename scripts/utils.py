@@ -129,8 +129,8 @@ def get_enrichment(triplet_exp, penta_exp, genome_tri, genome_pent,
     triplet_context = get_context_norm(genome_tri, triplet_exp)
     penta_context = get_context_norm(genome_pent, penta_exp)
 
-    triplet_dir = os.path.join(output, 'triplet_{}'.format(label))
-    penta_dir = os.path.join(output, 'pentamer_{}'.format(label))
+    triplet_dir = os.path.join(output, 'triplet_{}.pdf'.format(label))
+    penta_dir = os.path.join(output, 'pentamer_{}.pdf'.format(label))
 
     generate_plots(
         triplet_context, penta_context, triplet_dir, 
