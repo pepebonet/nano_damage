@@ -56,17 +56,17 @@ def do_plots(df, cos_sim, output, label):
     custom_lines = []
     
     plt.bar(df['CONTEXT'], df['Norm Novoa'] * -1, 
-        color='#59abff', alpha=0.3, label='Negative Novoa')
+        color='#6baed6', alpha=1, label='Negative Novoa')
     plt.bar(df['CONTEXT'], df['Norm Tombo'], 
-        color='lightblue', alpha=0.7, label='Tombo')
+        color='#2171b5', alpha=1, label='Tombo')
     plt.bar(df['CONTEXT'], df['Tombo - Novoa'], 
-        color='#16416e', alpha=0.9, label='Tombo - Novoa')
+        color='#08306b', alpha=1, label='Tombo - Novoa')
     
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
-    for el in [('Novoa Enrichment (Negative)', '#59abff'), 
-        ('Tombo Enrichment', 'lightblue'), ('Tombo - Novoa', '#16416e')]:
+    for el in [('Novoa Enrichment (Negative)', '#6baed6'), 
+        ('Tombo Enrichment', '#2171b5'), ('Tombo - Novoa', '#08306b')]:
         custom_lines.append(
             plt.plot([],[], marker="o", ms=8, ls="", mec='black', 
             mew=0, color=el[1], label=el[0])[0] 
