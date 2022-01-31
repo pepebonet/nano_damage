@@ -3,12 +3,44 @@ import os
 import sys
 import click
 import pandas as pd
+from collections import Counter
+
+from bgreference import hg19
 
 sys.path.append('./scripts')
 import utils as ut
 import plots as pl
 
 col_names = ['CHROM', 'Start', 'pos', 'SEQ', 'strand']
+
+
+#Obtain context for every base
+def obtain_contex(df, cont, cent):
+    try:
+        seq = hg19(df['CHROM'], df['pos'] - cent, cont)
+
+        if len(seq) < cont:
+            return '-'
+        else:
+            if df['strand'] == '-':
+                return ut.comp_seq(seq)
+            else:
+                return seq
+
+    except:
+        seq = '-'
+    return seq
+
+
+def counts_reference_genome(chrom_len):
+    
+    for file in chrom_len:
+        seq = 'hello'
+        penta = Counter(list(ut.slicing_window(seq, 5)))
+        triplet = Counter(list(ut.slicing_window(seq, 3)))
+
+    return penta, triplet
+
 
 def load_data(rep1_path, rep2_path, chrom_len):
     
@@ -19,12 +51,12 @@ def load_data(rep1_path, rep2_path, chrom_len):
     rep2['ID'] = rep2['CHROM'] + '_' + rep2['pos'].astype(str) + '_' + rep2['strand']
 
     data = pd.merge(rep1, rep2, how='outer', on='ID')
-    import pdb;pdb.set_trace()
+
     chrom_len = pd.read_csv(
         chrom_len, sep='\t', names=['CHROM', 'LEN']
     )
     
-    return data, chrom_len
+    return rep1[0:10000], chrom_len
 
 
 @click.command(short_help='Get data from Sancar experiment')
@@ -36,12 +68,12 @@ def main(replicate_1, replicate_2, chrom_len, output):
 
     df, chrom_len = load_data(replicate_2, replicate_1, chrom_len)
 
-    penta_ref, triplet_ref = ut.counts_reference_genome(chrom_len)
+    penta_ref, triplet_ref = counts_reference_genome(chrom_len)
     import pdb;pdb.set_trace()
     # df['SEQ'] = df.apply(ut.annot, axis = 1)
 
-    df['PENTAMER'] = df.apply(ut.obtain_contex, args=(5,2), axis=1)
-    df['TRIPLET'] = df.apply(ut.obtain_contex, args=(3,1), axis=1)
+    df['PENTAMER'] = df.apply(obtain_contex, args=(5,2), axis=1)
+    df['TRIPLET'] = df.apply(obtain_contex, args=(3,1), axis=1)
 
     import pdb;pdb.set_trace()
     penta_exp = ut.get_context_counts(df, 'PENTAMER')
