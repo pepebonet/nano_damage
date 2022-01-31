@@ -6,12 +6,12 @@ from bgreference import hg19
 import pysam
 import pandas as pd
 
-MAIN_DIR = '/workspace/projects/repair_states/data/UV_damage/sancar/reads/'
+MAIN_DIR = '/workspace/projects/nanopore/sancar_data/analysis_2022/'
 BOWTIE = 'bowtie2'
 SAMTOOLS = 'samtools'
 JAVA = 'java'
 REF = '/workspace/datasets/genomes/iGenomes/Homo_sapiens/UCSC/hg19/Sequence/Bowtie2Index/genome'
-C = 12
+C = 56
 GB = 200
 
 REMOVE_DUPLICATES_PAIRS = True
@@ -19,8 +19,8 @@ DISCARD_MISLIGATED_ADAPTER = True
 
 #23
 ANALYSIS_DIR = MAIN_DIR.rstrip('/')
-FILENAMES = ['SRR5461431', 'SRR5461432']
-#FILENAMES = ['SRR5461431']
+FILENAMES = ['SRR3623538', 'SRR3623539']
+#FILENAMES = ['SRR3623538']
 FS = ['{}_1.fastq.gz'.format(filename) for filename in FILENAMES] + ['{}_2.fastq.gz'.format(filename) for filename in FILENAMES]
 FILE_PAIR_FORMATS = ['{}_{}.fastq.gz'.format(filename, '{}') for filename in FILENAMES]
 discard_adapter_5p = 'GACTGGTTCCAATTGAAAGTGCTCTTCCGATCT'
@@ -237,14 +237,14 @@ def extract_pos_from_sam(samfile):
                         if s != 0:  # exclude reads mapping to beginning of assembly & damage is outside of the reference
                             damage_pos = s -1 # 1 downstream of 3' end;
 
-                            ref = get_preceding(chrom, damage_pos, 2)
+                            ref = get_preceding(chrom, damage_pos, 1)
                             bed_lines.append((chrom, damage_pos - 1, damage_pos+1, ref, '+'))
 
                     else:  # strand -
                         if e != samfile.lengths[c]:  # exclude reads mapping to end of assembly & damage is outside of the reference
                             damage_pos = e + 1  # "reference_end points to one past the last aligned residue"
 
-                            ref = reverse_complement(get_preceding(chrom, damage_pos, 2))
+                            ref = reverse_complement(get_preceding(chrom, damage_pos, 1))
                             bed_lines.append((chrom, damage_pos - 1, damage_pos+1, ref, '-'))
 
     samfile.close()
@@ -270,7 +270,7 @@ def save_damage_pos_bed(bam_sort_path, bedtools_path, genome_path):
         read_bed_lines = list(set(read_bed_lines))
         print(len(read_bed_lines))
         bed_df = pd.DataFrame(read_bed_lines, columns=['chr', 'start', 'end', 'dipyr', 'strand'])
-        bed_df = bed_df[bed_df.dipyr.isin(['TT','CT'])].copy() # TODO this is for CPD! for 64-PP is TC.
+        # bed_df = bed_df[bed_df.dipyr.isin(['TT','CT'])].copy() # TODO this is for CPD! for 64-PP is TC.
         bed_df = bed_df.sort_values(by=['chr', 'start'], ascending=[True, True])
         print('and after getting only the wanted dipyrimidine types')
         print(len(bed_df))
@@ -299,7 +299,6 @@ if __name__ == '__main__':
     check_install()
     genome_path = '/workspace/projects/repair_states/data/genomechunks/human.hg19.genome'
     bedtools_path = get_bedtools_path()
-
 
     for filename in FILENAMES:
         ANALYSIS_DIR = MAIN_DIR + filename
