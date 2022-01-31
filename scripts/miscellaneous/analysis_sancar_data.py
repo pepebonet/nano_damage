@@ -8,59 +8,42 @@ sys.path.append('./scripts')
 import utils as ut
 import plots as pl
 
+col_names = ['CHROM', 'Start', 'pos', 'SEQ', 'strand']
 
-def get_base_percentage(df):
-    only_met =  df[df['READS'] != 0]
-
-    q1 = only_met['READS'].quantile([0.90]).tolist()
-    new_df = only_met[only_met['READS'] > q1[0]]
-
-    return new_df
-
-
-def load_data(plus_s, minus_s, chrom_len):
-
-    B_p_all = pd.DataFrame()
-    for el in plus_s:
-        B_p = pd.read_csv(el, sep='\t', \
-            names=['CHROM', 'P0', 'pos', 'ID', 'READS'])
-        B_p['strand'] = '+'
-        B_p_all = pd.concat([B_p_all, B_p])
+def load_data(rep1_path, rep2_path, chrom_len):
     
-    B_m_all = pd.DataFrame()
-    for el in minus_s:
-        B_m = pd.read_csv(el, sep='\t', \
-            names=['CHROM', 'P0', 'pos', 'ID', 'READS'])
-        B_m['strand'] = '-'
-        B_m_all = pd.concat([B_m_all, B_p])
+    rep1 = pd.read_csv(rep1_path, sep='\t', header=None, names=col_names)
+    rep1['ID'] = rep1['CHROM'] + '_' + rep1['pos'].astype(str) + '_' + rep1['strand']
 
-    B = pd.concat([B_p_all, B_m_all])
+    rep2 = pd.read_csv(rep2_path, sep='\t', header=None, names=col_names)
+    rep2['ID'] = rep2['CHROM'] + '_' + rep2['pos'].astype(str) + '_' + rep2['strand']
 
+    data = pd.merge(rep1, rep2, how='outer', on='ID')
+    import pdb;pdb.set_trace()
     chrom_len = pd.read_csv(
         chrom_len, sep='\t', names=['CHROM', 'LEN']
     )
     
-    return B, chrom_len
+    return data, chrom_len
 
 
-@click.command(short_help='Get data from Mao experiment')
-@click.option('-ms', '--minus_strand', required=True, multiple=True)
-@click.option('-ps', '--plus_strand', required=True, multiple=True)
+@click.command(short_help='Get data from Sancar experiment')
+@click.option('-r1', '--replicate_1', required=True)
+@click.option('-r2', '--replicate_2', required=True)
 @click.option('-cl', '--chrom_len', required=True)
 @click.option('-o', '--output', required=True)
-def main(minus_strand, plus_strand, chrom_len, output):
+def main(replicate_1, replicate_2, chrom_len, output):
 
-    df, chrom_len = load_data(plus_strand, minus_strand, chrom_len)
+    df, chrom_len = load_data(replicate_2, replicate_1, chrom_len)
 
     penta_ref, triplet_ref = ut.counts_reference_genome(chrom_len)
-
-    df = get_base_percentage(df)
-    
-    df['SEQ'] = df.apply(ut.annot, axis = 1)
+    import pdb;pdb.set_trace()
+    # df['SEQ'] = df.apply(ut.annot, axis = 1)
 
     df['PENTAMER'] = df.apply(ut.obtain_contex, args=(5,2), axis=1)
     df['TRIPLET'] = df.apply(ut.obtain_contex, args=(3,1), axis=1)
 
+    import pdb;pdb.set_trace()
     penta_exp = ut.get_context_counts(df, 'PENTAMER')
     triplet_exp = ut.get_context_counts(df, 'TRIPLET')
 
@@ -69,7 +52,7 @@ def main(minus_strand, plus_strand, chrom_len, output):
 
     triplet_dir = os.path.join(output, 'triplet')
     penta_dir = os.path.join(output, 'pentamer')
-
+    import pdb;pdb.set_trace()
     #Obtain plots
     pl.obtain_plots(triplet_context, triplet_dir, 'triplet', 16)
     pl.obtain_plots(penta_context, penta_dir, 'pentamer', 256)
