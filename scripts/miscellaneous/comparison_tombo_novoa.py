@@ -65,8 +65,8 @@ def do_plots(df, cos_sim, output, label):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
-    for el in [('Novoa Enrichment (Negative)', '#6baed6'), 
-        ('Tombo Enrichment', '#2171b5'), ('Tombo - Novoa', '#08306b')]:
+    for el in [('SemiSup Enrichment (Negative)', '#6baed6'), 
+        ('Tombo Enrichment', '#2171b5'), ('Tombo - SemiSup', '#08306b')]:
         custom_lines.append(
             plt.plot([],[], marker="o", ms=8, ls="", mec='black', 
             mew=0, color=el[1], label=el[0])[0] 
