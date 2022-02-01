@@ -84,8 +84,8 @@ def main(replicate_1, replicate_2, chrom_len, output):
     triplet_context = ut.get_context_norm(triplet_ref, triplet_exp)
     penta_context = ut.get_context_norm(penta_ref, penta_exp)
 
-    triplet_dir = os.path.join(output, 'triplet')
-    penta_dir = os.path.join(output, 'pentamer')
+    triplet_dir = os.path.join(output, 'triplet.pdf')
+    penta_dir = os.path.join(output, 'pentamer.pdf')
 
     #Obtain plots
     pl.obtain_plots(triplet_context, triplet_dir, 'triplet', 16)

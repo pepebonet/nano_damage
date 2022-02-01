@@ -250,8 +250,8 @@ def main(args):
 
     out_dir = get_output_dir(args, df.shape[0])
 
-    triplet_dir = os.path.join(out_dir, 'triplet')
-    penta_dir = os.path.join(out_dir, 'pentamer')
+    triplet_dir = os.path.join(out_dir, 'triplet.pdf')
+    penta_dir = os.path.join(out_dir, 'pentamer.pdf')
 
     #Obtain plots
     generate_plots(
