@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-
+import os
 import click
 import numpy as np
 import pandas as pd
 from scipy import spatial
+import matplotlib.pyplot as plt
 import seaborn as sns
 
 import sys
@@ -16,7 +17,7 @@ names = ['Novoa Cisplatin', 'Novoa MMS', 'Tombo MMS', 'Tombo Cisplatin',
 
 def get_cosines(nc, nm, tm, tc, mm, sc):
 
-    df = pd.DataFrame(columns=names, index=names)
+    df = pd.DataFrame(columns=names, index=names, dtype='float64')
 
     for el1 in [(nc, 'Novoa Cisplatin'), (nm, 'Novoa MMS'), 
         (tm, 'Tombo MMS'), (tc, 'Tombo Cisplatin'), (mm, 'Mao MMS'), 
@@ -26,9 +27,10 @@ def get_cosines(nc, nm, tm, tc, mm, sc):
                 (sc, 'Sancar Cisplatin')]:
             cos_sim = round(1 - spatial.distance.cosine(
                 el1[0]['TOTAL_NORM'].tolist(), el2[0]['TOTAL_NORM'].tolist()), 2)
-            print(f'Cosine {el1[1]} - {el2[1]}: {cos_sim}')
+            # print(f'Cosine {el1[1]} - {el2[1]}: {cos_sim}')
 
             df[el1[1]][el2[1]] = cos_sim
+
     return df
 
 
@@ -56,15 +58,21 @@ def load_data(novoa_cis, novoa_mms, tombo_mms, tombo_cis, mao_mms, sancar_cis):
 
     return nc, nm, tm, tc, mm, sc
 
-
+#TODO imrprove plot
 def plot_heatmap(df, output):
 
-    corr = np.corrcoef(df.values)
-    mask = np.zeros_like(corr)
+    mask = np.zeros_like(df.values)
     mask[np.triu_indices_from(mask)] = True
+
     with sns.axes_style("white"):
-        f, ax = plt.subplots(figsize=(7, 5))
-        ax = sns.heatmap(corr, mask=mask, vmax=.3, square=True)
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax = sns.heatmap(df, mask=mask, square=True, cmap='Blues')
+    
+    outdir = os.path.join(output, "heatmap_all.pdf")
+    fig.tight_layout()
+
+    plt.savefig(outdir)
+    plt.close()
 
 
 @click.command(short_help='Get comparison all and heatmap')
