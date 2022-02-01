@@ -65,7 +65,7 @@ def do_plots(df, cos_sim, output, label_method, label):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
-    for el in [('sancar Enrichment (Negative)', '#6baed6'), 
+    for el in [('Sancar Enrichment (Negative)', '#6baed6'), 
         (f'{label_method} Enrichment', '#2171b5'), 
         (f'{label_method} - Sancar', '#08306b')]:
         custom_lines.append(
@@ -92,9 +92,11 @@ def do_plots(df, cos_sim, output, label_method, label):
         facecolor='white', ncol=1, fontsize=10, frameon=False
     )
 
-    out_file = os.path.join(output, f'comp_sancar_{label_method}_{label}.pdf')
+    out_file1 = os.path.join(output, f'comp_sancar_{label_method}_{label}.pdf')
+    out_file2 = os.path.join(output, f'comp_sancar_{label_method}_{label}.png')
     fig.tight_layout()
-    plt.savefig(out_file)
+    plt.savefig(out_file1)
+    plt.savefig(out_file2)
     plt.close()
 
 
