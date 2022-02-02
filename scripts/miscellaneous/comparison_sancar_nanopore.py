@@ -26,6 +26,8 @@ def load_data(triplet_sancar, pentamer_sancar, triplet_nanopore, pentamer_nanopo
 
 #obtain comparison df joining sancar and nanopore data
 def obtain_df(n, m):
+    m = m[m['CONTEXT' ].str.contains('N') == False]
+    m['Norm sancar'] = m['REF_NORM_sancar'] / m['REF_NORM_sancar'].sum()
 
     result = pd.merge(n, m, on='CONTEXT', how='outer').fillna(0)
 
