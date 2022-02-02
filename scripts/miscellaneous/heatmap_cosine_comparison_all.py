@@ -11,7 +11,7 @@ import sys
 sys.path.append('./scripts/')
 import utils as ut
 
-names = ['Novoa Cisplatin', 'Novoa MMS', 'Tombo MMS', 'Tombo Cisplatin',
+names = ['SemiSup Cisplatin', 'SemiSup MMS', 'Tombo MMS', 'Tombo Cisplatin',
         'Mao MMS', 'Sancar Cisplatin']
 
 
@@ -19,10 +19,10 @@ def get_cosines(nc, nm, tm, tc, mm, sc):
 
     df = pd.DataFrame(columns=names, index=names, dtype='float64')
 
-    for el1 in [(nc, 'Novoa Cisplatin'), (nm, 'Novoa MMS'), 
+    for el1 in [(nc, 'SemiSup Cisplatin'), (nm, 'SemiSup MMS'), 
         (tm, 'Tombo MMS'), (tc, 'Tombo Cisplatin'), (mm, 'Mao MMS'), 
             (sc, 'Sancar Cisplatin')]:
-        for el2 in  [(nc, 'Novoa Cisplatin'), (nm, 'Novoa MMS'), 
+        for el2 in  [(nc, 'SemiSup Cisplatin'), (nm, 'SemiSup MMS'), 
             (tm, 'Tombo MMS'), (tc, 'Tombo Cisplatin'), (mm, 'Mao MMS'), 
                 (sc, 'Sancar Cisplatin')]:
             cos_sim = round(1 - spatial.distance.cosine(
@@ -30,7 +30,7 @@ def get_cosines(nc, nm, tm, tc, mm, sc):
             # print(f'Cosine {el1[1]} - {el2[1]}: {cos_sim}')
 
             df[el1[1]][el2[1]] = cos_sim
-
+    import pdb;pdb.set_trace()
     return df
 
 
@@ -66,7 +66,8 @@ def plot_heatmap(df, output):
 
     with sns.axes_style("white"):
         fig, ax = plt.subplots(figsize=(7, 5))
-        ax = sns.heatmap(df, mask=mask, square=True, cmap='Blues')
+        ax = sns.heatmap(df, mask=mask, square=True, cmap='Blues', 
+            cbar_kws={'label': 'Cosine Similarity'}, annot=True)
     
     outdir = os.path.join(output, "heatmap_all.pdf")
     fig.tight_layout()
