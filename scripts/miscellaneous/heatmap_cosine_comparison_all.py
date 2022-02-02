@@ -25,12 +25,18 @@ def get_cosines(nc, nm, tm, tc, mm, sc):
         for el2 in  [(nc, 'SemiSup Cisplatin'), (nm, 'SemiSup MMS'), 
             (tm, 'Tombo MMS'), (tc, 'Tombo Cisplatin'), (mm, 'Mao MMS'), 
                 (sc, 'Sancar Cisplatin')]:
-            cos_sim = round(1 - spatial.distance.cosine(
-                el1[0]['TOTAL_NORM'].tolist(), el2[0]['TOTAL_NORM'].tolist()), 2)
-            # print(f'Cosine {el1[1]} - {el2[1]}: {cos_sim}')
+
+            if el1[1] == 'Mao MMS' or el2[1] == 'Mao MMS':
+                cos_sim = round(1 - spatial.distance.cosine(
+                    el1[0][1]['TOTAL_NORM'].tolist(), el2[0][1]['TOTAL_NORM'].tolist()), 2)
+                
+            else:
+                
+                cos_sim = round(1 - spatial.distance.cosine(
+                    el1[0][0]['TOTAL_NORM'].tolist(), el2[0][0]['TOTAL_NORM'].tolist()), 2)
 
             df[el1[1]][el2[1]] = cos_sim
-    import pdb;pdb.set_trace()
+
     return df
 
 
@@ -46,19 +52,32 @@ def fix_sancar(df):
     return df[ df['CONTEXT' ].str.contains('N') == False]
 
 
+def fix_for_mao(df, mao):
+    return pd.merge(mao['CONTEXT'], df, how='inner', on='CONTEXT')
+
+
 def load_data(novoa_cis, novoa_mms, tombo_mms, tombo_cis, mao_mms, sancar_cis):
+    mm = pd.read_csv(mao_mms, sep='\t').sort_values('CONTEXT')
+
     tm = pd.read_csv(tombo_mms, sep='\t').sort_values('CONTEXT')
+    tmm = fix_for_mao(tm, mm).sort_values('CONTEXT')
+    
     tc = pd.read_csv(tombo_cis, sep='\t').sort_values('CONTEXT')
+    tcm = fix_for_mao(tc, mm).sort_values('CONTEXT')
 
     nc = fix_data(pd.read_csv(novoa_cis, sep='\t'), tm).sort_values('CONTEXT')
+    ncm = fix_for_mao(nc, mm).sort_values('CONTEXT')
+
     nm = fix_data(pd.read_csv(novoa_mms, sep='\t'), tm).sort_values('CONTEXT')
+    nmm = fix_for_mao(nm, mm).sort_values('CONTEXT')
     
-    mm = fix_data(pd.read_csv(mao_mms, sep='\t'), tm)
+    
     sc = fix_sancar(pd.read_csv(sancar_cis, sep='\t')).sort_values('CONTEXT')
+    scm = fix_for_mao(sc, mm).sort_values('CONTEXT')
+    
+    return (nc, ncm), (nm, nmm), (tm, tmm), (tc, tcm), (mm, mm), (sc, scm)
 
-    return nc, nm, tm, tc, mm, sc
 
-#TODO imrprove plot
 def plot_heatmap(df, output):
 
     mask = np.zeros_like(df.values)
