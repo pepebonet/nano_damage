@@ -14,6 +14,10 @@ import utils as ut
 names = ['SemiSup Cisplatin', 'SemiSup MMS', 'Tombo MMS', 'Tombo Cisplatin',
         'Mao MMS', 'Sancar Cisplatin']
 
+names_extended = ['SemiSup Cisplatin', 'SemiSup Cisplatin Mao', 'SemiSup MMS', 
+    'SemiSup MMS Mao', 'Tombo MMS', 'Tombo MMS Mao', 'Tombo Cisplatin',
+    'Tombo Cisplatin Mao', 'Mao MMS', 'Sancar Cisplatin', 'Sancar Cisplatin Mao']
+
 
 def get_cosines(nc, nm, tm, tc, mm, sc):
 
@@ -56,26 +60,58 @@ def fix_for_mao(df, mao):
     return pd.merge(mao['CONTEXT'], df, how='inner', on='CONTEXT')
 
 
+def get_signature_df(mm, tm, tmm, tc, tcm, nc, ncm, nm, nmm, sc, scm):
+    sig = pd.DataFrame(columns=['SemiSup Cisplatin', 'SemiSup MMS', 'Tombo MMS', 
+        'Tombo Cisplatin', 'Sancar Cisplatin'])
+    sig_mao = pd.DataFrame(columns=names)
+    
+    sig['SemiSup Cisplatin'] = nc['TOTAL_NORM']
+    sig['SemiSup MMS'] = nm['TOTAL_NORM']
+    sig['Tombo MMS'] = tm['TOTAL_NORM']
+    sig['Tombo Cisplatin'] = tc['TOTAL_NORM']
+    sig['Sancar Cisplatin'] = sc['TOTAL_NORM']
+
+    sig_mao['SemiSup Cisplatin'] = ncm['TOTAL_NORM']
+    sig_mao['SemiSup MMS'] = nmm['TOTAL_NORM']
+    sig_mao['Tombo MMS'] = tmm['TOTAL_NORM']
+    sig_mao['Tombo Cisplatin'] = tcm['TOTAL_NORM']
+    sig_mao['Sancar Cisplatin'] = scm['TOTAL_NORM']
+    sig_mao['Mao MMS'] = mm['TOTAL_NORM']
+
+    return sig, sig_mao
+
+
 def load_data(novoa_cis, novoa_mms, tombo_mms, tombo_cis, mao_mms, sancar_cis):
-    mm = pd.read_csv(mao_mms, sep='\t').sort_values('CONTEXT')
+    mm = pd.read_csv(mao_mms, sep='\t').sort_values('CONTEXT')\
+        .reset_index(drop=True)
 
-    tm = pd.read_csv(tombo_mms, sep='\t').sort_values('CONTEXT')
-    tmm = fix_for_mao(tm, mm).sort_values('CONTEXT')
+    tm = pd.read_csv(tombo_mms, sep='\t').sort_values('CONTEXT')\
+        .reset_index(drop=True)
+    tmm = fix_for_mao(tm, mm).sort_values('CONTEXT').reset_index(drop=True)
     
-    tc = pd.read_csv(tombo_cis, sep='\t').sort_values('CONTEXT')
-    tcm = fix_for_mao(tc, mm).sort_values('CONTEXT')
+    tc = pd.read_csv(tombo_cis, sep='\t').sort_values('CONTEXT')\
+        .reset_index(drop=True)
+    tcm = fix_for_mao(tc, mm).sort_values('CONTEXT').reset_index(drop=True)
 
-    nc = fix_data(pd.read_csv(novoa_cis, sep='\t'), tm).sort_values('CONTEXT')
-    ncm = fix_for_mao(nc, mm).sort_values('CONTEXT')
+    nc = fix_data(pd.read_csv(novoa_cis, sep='\t'), tm)\
+        .sort_values('CONTEXT').reset_index(drop=True)
+    ncm = fix_for_mao(nc, mm).sort_values('CONTEXT').reset_index(drop=True)
 
-    nm = fix_data(pd.read_csv(novoa_mms, sep='\t'), tm).sort_values('CONTEXT')
-    nmm = fix_for_mao(nm, mm).sort_values('CONTEXT')
+    nm = fix_data(pd.read_csv(novoa_mms, sep='\t'), tm)\
+        .sort_values('CONTEXT').reset_index(drop=True)
+    nmm = fix_for_mao(nm, mm).sort_values('CONTEXT').reset_index(drop=True)
     
     
-    sc = fix_sancar(pd.read_csv(sancar_cis, sep='\t')).sort_values('CONTEXT')
-    scm = fix_for_mao(sc, mm).sort_values('CONTEXT')
-    
-    return (nc, ncm), (nm, nmm), (tm, tmm), (tc, tcm), (mm, mm), (sc, scm)
+    sc = fix_sancar(pd.read_csv(sancar_cis, sep='\t'))\
+        .sort_values('CONTEXT').reset_index(drop=True)
+    scm = fix_for_mao(sc, mm).sort_values('CONTEXT').reset_index(drop=True)
+
+    sig, sig_mao = get_signature_df(
+        mm, tm, tmm, tc, tcm, nc, ncm, nm, nmm, sc, scm
+    )
+
+    return (nc, ncm), (nm, nmm), (tm, tmm), (tc, tcm), (mm, mm), \
+        (sc, scm), sig, sig_mao
 
 
 def plot_heatmap(df, output):
@@ -106,12 +142,14 @@ def plot_heatmap(df, output):
 def main(novoa_cis, novoa_mms, mao_mms, sancar_cis, tombo_mms, 
     tombo_cis, output):
 
-    nc, nm, tm, tc, mm, sc = load_data(
+    nc, nm, tm, tc, mm, sc, sig, sig_mao = load_data(
         novoa_cis, novoa_mms, tombo_mms, tombo_cis, mao_mms, sancar_cis
     )
-     
-    df = get_cosines(nc, nm, tm, tc, mm, sc)
+    sig.to_csv(os.path.join(output, 'signatures.tsv'), sep='\t', index=None)    
+    sig_mao.to_csv(os.path.join(output, 'signatures_mao.tsv'), sep='\t', index=None)
 
+    df = get_cosines(nc, nm, tm, tc, mm, sc)
+    df.to_csv(os.path.join(output, 'data_cosines.tsv'), sep='\t')
 
     plot_heatmap(df, output)
 
