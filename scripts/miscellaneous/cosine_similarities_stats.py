@@ -57,19 +57,36 @@ def dirichlet_generator(signature, cosines_df, n_draws, n_channels, alpha=1):
                 pval = sum((np.array(cosines) >= cosines_df[c][el])) / n_draws
                 logpval = [-np.log10(pval) if pval > 0 else -np.log10(1/n_draws)][0]
                 df[c][el] = logpval
-    import pdb;pdb.set_trace()
 
-    # import pdb;pdb.set_trace()
+    return df
+
+def dirichlet_generator_mao(signature, cosines_df, df, n_draws, n_channels, alpha=1):
+
+    sig = signature['Mao MMS'].values
+    s_pool = np.random.dirichlet(
+        alpha=[alpha for _ in range(n_channels)], size=n_draws
+    )
+    cosines = list(map(lambda x: 1-cosine(x, sig), s_pool))
+    for el in cosines_df.index:
+        pval = sum((np.array(cosines) >= cosines_df['Mao MMS'][el])) / n_draws
+        logpval = [-np.log10(pval) if pval > 0 else -np.log10(1/n_draws)][0]
+        df['Mao MMS'][el] = logpval
+        df[el]['Mao MMS'] = logpval
+                
     return df
 
 
 def dirichlet_vs_dirichlet(n_draws, n_channels, alpha=1):
     
     cosines = []
-    sig_pool_1 = np.random.dirichlet(alpha=[alpha for _ in range(n_channels)], size=n_draws)
-    sig_pool_2 = np.random.dirichlet(alpha=[alpha for _ in range(n_channels)], size=n_draws)
+    sig_pool_1 = np.random.dirichlet(
+        alpha=[alpha for _ in range(n_channels)], size=n_draws
+    )
+    sig_pool_2 = np.random.dirichlet(
+        alpha=[alpha for _ in range(n_channels)], size=n_draws
+    )
     cosines = list(map(lambda x, y: 1-cosine(x, y), sig_pool_1, sig_pool_2))
-    import pdb;pdb.set_trace()
+
     return np.array(cosines)
 
 
@@ -77,8 +94,8 @@ def test_alphas(channels, label, output):
 
     means = []
     pvals = []
-    N = 10000
-    x = np.linspace(0.1, 3.5, num=100)
+    N = 1000
+    x = np.linspace(0.1, 20, num=100)
     for alpha in tqdm(x):
         cosines = dirichlet_vs_dirichlet(N, channels, alpha=alpha)
         pvals.append(np.sum(cosines >= 0.85) / N)
@@ -135,34 +152,55 @@ def do_plots(labels, logpvals, means, alpha, label, output):
     plt.close()
 
 
+def plot_heatmap(df, output):
+
+    mask = np.zeros_like(df.values)
+    mask[np.triu_indices_from(mask)] = True
+
+    with sns.axes_style("white"):
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax = sns.heatmap(df, mask=mask, square=True, cmap='Blues', 
+            cbar_kws={'label': '-   log10 p-value'}, annot=True)
+    
+    outdir = os.path.join(output, "heatmap_stats_cosines.pdf")
+    fig.tight_layout()
+
+    plt.savefig(outdir)
+    plt.close()
+
+
 @click.command(short_help='Get stats from cosines')
 @click.option('-sa', '--signatures_all', required=True)
 @click.option('-sm', '--signatures_mao', required=True)
 @click.option('-dc', '--data_cosines', required=True)
+@click.option('-a', '--alpha', default=2)
+@click.option('-ns', '--n_samples', default=10000)
 @click.option('-o', '--output', required=True)
-def main(signatures_all, signatures_mao, data_cosines, output):
+def main(signatures_all, signatures_mao, data_cosines, alpha, n_samples, output):
 
     sig = pd.read_csv(signatures_all, sep='\t')
     sig_mao = pd.read_csv(signatures_mao, sep='\t')
     df = pd.read_csv(data_cosines, sep='\t', index_col=0)
 
-    alpha = 2
-    n = 10000
+    # labels, logpvals, means = dirichlet_generator_old(
+    #     sig, df, n, 64, alpha=alpha
+    # )
+    # do_plots(labels, logpvals, means, alpha, 'all', output)
 
-    labels, logpvals, means = dirichlet_generator(
-        sig, df, n, 64, alpha=alpha
-    )
-    do_plots(labels, logpvals, means, alpha, 'all', output)
-
-    labels_mao, logpvals_mao, means_mao = dirichlet_generator_mao(
-        sig_mao, df, n, 32, alpha=alpha
-    )
-    do_plots(labels_mao, logpvals_mao, means_mao, alpha, 'mao', output)
-
+    # labels_mao, logpvals_mao, means_mao = dirichlet_generator_old(
+    #     sig_mao, df, n, 32, alpha=alpha
+    # )
+    # do_plots(labels_mao, logpvals_mao, means_mao, alpha, 'mao', output)
 
     test_alphas(64, 'all', output)
     test_alphas(32, 'mao', output)
-    import pdb;pdb.set_trace()
+
+    df_pvals = dirichlet_generator(sig, df, n_samples, 64, alpha=alpha)
+    df_all = dirichlet_generator_mao(
+        sig_mao, df, df_pvals, n_samples, 32, alpha=alpha
+    )
+
+    plot_heatmap(df_all, output)
 
 
 if __name__ == '__main__':
