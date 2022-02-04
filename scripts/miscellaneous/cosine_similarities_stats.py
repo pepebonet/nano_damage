@@ -13,33 +13,6 @@ from scipy.spatial.distance import cosine
 names = ['SemiSup Cisplatin', 'SemiSup MMS', 'Tombo MMS', 'Tombo Cisplatin',
         'Mao MMS', 'Sancar Cisplatin']
 
-def dirichlet_generator_old(signature, cosines_df, n_draws, n_channels, alpha=1):
-    
-    signatures = signature.columns
-    labels = []; means  = []; pvals  = []; cos = []
-    
-
-    for c in tqdm(signatures):
-        sig = signature[c].values
-        s_pool = np.random.dirichlet(
-            alpha=[alpha for _ in range(n_channels)], size=n_draws
-        )
-        cosines = list(map(lambda x: 1-cosine(x, sig), s_pool))
-        means.append(np.mean(cosines))
-        # for el in tqdm(cosines_df[c].values):
-        import pdb;pdb.set_trace()
-        pvals.append(sum((np.array(cosines) >= 0.8)) / n_draws)
-        labels.append(c); cos.append(0.8)
-        
-
-    logpvals = list(map(
-        lambda x: -np.log10(x) if x > 0 else -np.log10(1/n_draws), pvals)
-    )
-    print(labels, means, logpvals, pvals)
-    # import pdb;pdb.set_trace()
-    return labels, logpvals, means
-
-
 
 def dirichlet_generator(signature, cosines_df, n_draws, n_channels, alpha=1):
     
@@ -57,12 +30,7 @@ def dirichlet_generator(signature, cosines_df, n_draws, n_channels, alpha=1):
                 pval = sum((np.array(cosines) >= cosines_df[c][el])) / n_draws
                 logpval = [-np.log10(pval) if pval > 0 else -np.log10(1/n_draws)][0]
                 df[c][el] = logpval
-                if c == 'Tombo MMS' and el == 'Sancar Cisplatin':
-                    import pdb;pdb.set_trace()
-
-                if c == 'Sancar Cisplatin' and el == 'Tombo MMS':
-                    import pdb;pdb.set_trace()
-    import pdb;pdb.set_trace()
+    
     return df
 
 def dirichlet_generator_mao(signature, cosines_df, df, n_draws, n_channels, alpha=1):
@@ -83,7 +51,6 @@ def dirichlet_generator_mao(signature, cosines_df, df, n_draws, n_channels, alph
 
 def dirichlet_generator_mao_2(signature, cosines_df, df, n_draws, n_channels, alpha=1):
 
-
     signatures = signature.columns
 
     for c in tqdm(signatures):
@@ -100,12 +67,11 @@ def dirichlet_generator_mao_2(signature, cosines_df, df, n_draws, n_channels, al
                 
             else:
                 if el == 'Mao MMS':
-                    pval = sum((np.array(cosines) >= cosines_df['Mao MMS'][el])) / n_draws
+                    pval = sum(
+                        (np.array(cosines) >= cosines_df['Mao MMS'][el])) / n_draws
                     logpval = [-np.log10(pval) if pval > 0 else -np.log10(1/n_draws)][0]
                     df[c][el] = logpval
 
-    import pdb;pdb.set_trace()
-                
     return df
 
 
@@ -187,19 +153,19 @@ def do_plots(labels, logpvals, means, alpha, label, output):
 
 def plot_heatmap(df, df_cos, output):
 
-    mask = np.zeros_like(df_cos.values)
-    mask[np.triu_indices_from(mask)] = True
+    # mask = np.zeros_like(df_cos.values)
+    # mask[np.triu_indices_from(mask)] = True
     
     with sns.axes_style("white"):
         fig, ax = plt.subplots(figsize=(7, 5))
-        ax = sns.heatmap(df_cos, mask=mask, square=True, cmap='Blues', 
+        ax = sns.heatmap(df_cos, square=True, cmap='Blues', 
             cbar_kws={'label': 'Cosine Similarity'}, annot=True)
     
     
     from matplotlib.patches import Rectangle
     for i in range(df_cos.shape[0]):
         for k in range(df_cos.shape[1]):
-            if (df.iloc[i][k] >= 2) and (mask[i,k] == 0):
+            if (df.iloc[i][k] < 2):
                 ax.add_patch(Rectangle(
                     (k, i), 1, 1, fill=False, edgecolor='black', lw=2)
                 )
