@@ -152,9 +152,6 @@ def do_plots(labels, logpvals, means, alpha, label, output):
 
 
 def plot_heatmap(df, df_cos, output):
-
-    # mask = np.zeros_like(df_cos.values)
-    # mask[np.triu_indices_from(mask)] = True
     
     with sns.axes_style("white"):
         fig, ax = plt.subplots(figsize=(7, 5))
@@ -171,6 +168,32 @@ def plot_heatmap(df, df_cos, output):
                 )
 
     outdir = os.path.join(output, "heatmap_stats_cosines.pdf")
+    fig.tight_layout()
+
+    plt.savefig(outdir)
+    plt.close()
+
+
+def plot_heatmap_mask(df, df_cos, output):
+
+    mask = np.zeros_like(df_cos.values)
+    mask[np.tril_indices_from(mask)] = True
+    
+    with sns.axes_style("white"):
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax = sns.heatmap(df_cos, square=True, cmap='Blues', mask=mask,
+            cbar_kws={'label': 'Cosine Similarity'}, annot=True)
+    
+    
+    from matplotlib.patches import Rectangle
+    for i in range(df_cos.shape[0]):
+        for k in range(df_cos.shape[1]):
+            if (df.iloc[i][k] < 2) and (mask[i,k] == 0):
+                ax.add_patch(Rectangle(
+                    (k, i), 1, 1, fill=False, edgecolor='black', lw=2)
+                )
+
+    outdir = os.path.join(output, "heatmap_stats_cosines_mask.pdf")
     fig.tight_layout()
 
     plt.savefig(outdir)
@@ -207,8 +230,9 @@ def main(signatures_all, signatures_mao, data_cosines, alpha, n_samples, output)
     df_all = dirichlet_generator_mao_2(
         sig_mao, df, df_pvals, n_samples, 32, alpha=alpha
     )
-    import pdb;pdb.set_trace()
+
     plot_heatmap(df_all, df, output)
+    plot_heatmap_mask(df_all, df, output)
 
 
 if __name__ == '__main__':
