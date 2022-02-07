@@ -5,7 +5,9 @@ import pandas as pd
 
 def get_triplet_info(path):
     df = pd.read_csv(path, sep='\t')
-    
+    df = df[df['CONTEXT' ].str.contains('N') == False].reset_index()
+    df['TOTAL_NORM'] = df['REF_NORM'] / df['REF_NORM'].sum()
+
     try:
         df[['0', '1', '2', '3', '4']] = df.CONTEXT.str.split('', expand=True)
     except:
@@ -22,6 +24,8 @@ def get_triplet_info(path):
 
 def get_pentamer_info(path):
     df = pd.read_csv(path, sep='\t')
+    df = df[df['CONTEXT' ].str.contains('N') == False].reset_index()
+    df['TOTAL_NORM'] = df['REF_NORM'] / df['REF_NORM'].sum()
     try:
         df[['-1', '0', '1', '2', '3', '4', '5']] = df.CONTEXT.str.split('', expand=True)
     except:
