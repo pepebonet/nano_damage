@@ -3,11 +3,14 @@ import click
 import pandas as pd
 
 
-
 def get_triplet_info(path):
     df = pd.read_csv(path, sep='\t')
     
-    df[['0', '1', '2', '3', '4']] = df.CONTEXT.str.split('', expand=True)
+    try:
+        df[['0', '1', '2', '3', '4']] = df.CONTEXT.str.split('', expand=True)
+    except:
+        df[['1', '2', '3']] = pd.DataFrame(df['CONTEXT'].apply(lambda x: list(x)).tolist())
+
     df_gs = df[df['2'] == 'G']
     prop_gs = round(df_gs['TOTAL_NORM'].sum(), 2)
     df_as = df[df['2'] == 'A']
@@ -19,8 +22,11 @@ def get_triplet_info(path):
 
 def get_pentamer_info(path):
     df = pd.read_csv(path, sep='\t')
-    df[['-1', '0', '1', '2', '3', '4', '5']] = df.CONTEXT.str.split('', expand=True)
-
+    try:
+        df[['-1', '0', '1', '2', '3', '4', '5']] = df.CONTEXT.str.split('', expand=True)
+    except:
+        df[['0', '1', '2', '3', '4']] = pd.DataFrame(df['CONTEXT'].apply(lambda x: list(x)).tolist())
+    
     df_gs = df[df['2'] == 'G']
     prop_gs = round(df_gs['TOTAL_NORM'].sum(), 2)
     df_as = df[df['2'] == 'A']
