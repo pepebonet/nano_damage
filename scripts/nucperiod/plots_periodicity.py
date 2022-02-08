@@ -60,7 +60,7 @@ def plot(time, x, y, snr, peak, pval, output):
     ax[1].set_xlim(4, 50)
 
     ax[0].set_title('n = 1, SNR = {}\nMP = {}, p-value = {}, phase = -1'.format(
-        round(snr, 2), round(peak, 2), round(pval, 2)), fontsize=7.5)
+        round(snr, 2), round(peak, 2), round(pval, 4)), fontsize=7.5)
     ax[1].set_title('SNR = {}, MP = {}, phase = -1'.format(
         round(snr, 2), round(peak, 2)), fontsize=7.5
     )
