@@ -73,10 +73,13 @@ def do_plots(df, cos_sim, output, label):
         )
 
     ax.legend()
+
     if label == 'triplet':
         plt.xticks(fontsize=12, rotation=90)
+        ax.set_ylim(-0.14, 0.24)
     else:
         ax.get_xaxis().set_visible(False)
+        ax.set_ylim(-0.011, 0.032)
 
     plt.hlines(y=0, xmin=-0.5, xmax=len(df) - 0.5, color='black', 
         alpha=0.8, ls='dashed')
@@ -91,7 +94,7 @@ def do_plots(df, cos_sim, output, label):
         facecolor='white', ncol=1, fontsize=10, frameon=False
     )
 
-    out_file = os.path.join(output, 'comp_mao_nanopore_{}.pdf'.format(label))
+    out_file = os.path.join(output, 'comp_mao_nanopore_{}_lim.pdf'.format(label))
     fig.tight_layout()
     plt.savefig(out_file)
     plt.close()
