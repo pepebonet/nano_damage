@@ -1,6 +1,7 @@
 # Nano analysis
-Scripts to detect patterns of DNA methylation in yeast. 
+Recently, Nanopore long-read sequencing has emerged as a novel technology to enable direct detection of DNA modifications. Here, the idea is to explore the capabilities of Nanopore sequencing data to directly map a variety of DNA damages to the yeast genome in an unsupervised manner. The objective of the scripts is to shed light on the challenging question of whether it is possible to detect damage without previous knowledge and with a low damage proportion. For that we generate the pipeline shown in the following figure: 
 
+<img src="figures/Figure.png" alt="alt text" width=1000 height="whatever">
 
 # Contents
 - [Installation](#Installation)
