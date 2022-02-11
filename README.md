@@ -38,6 +38,7 @@ The objective here is to go from multi-fast5 to resquiggled fast5 files. To do s
         multi_to_single_fast5 --input_path multi_reads/ --save_path single_reads/ --threads 56
 
 3.- Resquiggle with Tombo: 
+        
         tombo resquiggle single_read/ path_to_reference_genome/ --processes 56 --num-most-common-errors 5
 
 These can also be done by adapting the Snakemake pipeline in the `simulation` folder. Changes to both the Snakefile and config.yaml will be needed. 
@@ -45,60 +46,67 @@ These can also be done by adapting the Snakemake pipeline in the `simulation` fo
         snakemake --cores 4
 
 
+## Detect Modifications (Tombo)
+
+Next, ones the reads are resquiggled tombo detect needs to be run to get the DNA modifications. To do so remember that you need matched samples (treated and untreated). 
+
+        tombo detect_modifications level_sample_compare --fast5-basedirs path_to_untreated_sample/ --alternate-fast5-basedirs path_to_treated_sample/ --statistics-file-basename sample_comparison_p_val --fishers-method-context 2 --minimum-test-reads 20 --multiprocess-region-size 1000 --processes 56 --num-most-significant-stored 8000000 --store-p-value
+
+
 ## Enrichment
 
-For the folder of the available data `Desktop/samples_nanopore_bbg_novoa` the enrichment script can be run for the different treatments as follows: 
+Given a folder containing the data `data_folder` the enrichment script can be run for the different treatments as follows: 
 
-        python scripts/enrichment.py -o outputs/retest_comnds_Dec2021/mms/ -cl  sacCer3.chrom.sizes -d ../samples_nanopore_bbg_novoa/first_batch_repeated/merged_treated_mms/denovo.tsv.gz
-
-        python scripts/enrichment.py -o outputs/retest_comnds_Dec2021/aag/ -cl  sacCer3.chrom.sizes -d ../samples_nanopore_bbg_novoa/first_batch_repeated/merged_treated_aag/denovo.tsv.gz
-
-        python scripts/enrichment.py -o outputs/retest_commands_Dec2021/ems/ -cl  sacCer3.chrom.sizes -d ../samples_nanopore_bbg_novoa/FAL40053.EMS.mf01.P01/denovo.tsv.gz
-
-        python scripts/enrichment.py -o outputs/retest_comnds_Dec2021/cisplatin/ -cl  sacCer3.chrom.sizes -d ../samples_nanopore_bbg_novoa/FAL40053.cisplatin.mf01.P01/denovo.tsv.gz
+        python scripts/enrichment_tombo.py -o output_folder/ -cl  chromatin_features/chromosome_info_yeast/sacCer3.chrom.sizes -d data_folder/sample_comparison_p_val.tombo.stats -ls -ms 1000000 -pv 0.0000001
 
 
 ## Nucleosomes Norm
 
 After the damage and the enrichment is obtained we want to focus only in the nucleosome. Therefore, the commands below are run: 
 
-        python scripts/nucleosome_damage_norm.py -da outputs/retest_commands_Dec2021/mms/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -ed outputs/retest_commands_Dec2021/mms/triplet_normalized_Nanopore.tsv -o outputs/retest_commands_Dec2021/mms/
+        python scripts/nucleosome_damage_norm.py -da output_folder/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -ed output_folder/triplet_normalized_Nanopore.tsv -o output_folder/
 
-        python scripts/nucleosome_damage_norm.py -da outputs/retest_commands_Dec2021/aag/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -ed outputs/retest_commands_Dec2021/aag/triplet_normalized_Nanopore.tsv -o outputs/retest_commands_Dec2021/aag/
-
-        python scripts/nucleosome_damage_norm.py -da outputs/retest_commands_Dec2021/ems/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -ed outputs/retest_commands_Dec2021/ems/triplet_normalized_Nanopore.tsv -o outputs/retest_commands_Dec2021/ems/
-
-        python scripts/nucleosome_damage_norm.py -da outputs/retest_commands_Dec2021/cisplatin/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -ed outputs/retest_commands_Dec2021/cisplatin/triplet_normalized_Nanopore.tsv -o outputs/retest_commands_Dec2021/cisplatin/
 
 ## Randomizations
 
 Once the damage in the nucleosomes is obtained the following commands need to be run to obtain the randomizations of the damage (remember the -nr parameter for the number of randomizations to reduce the running time): 
 
-        python scripts/randomizations_damage.py -dn outputs/retest_commands_Dec2021/mms/damage_in_nucleosomes.tsv -ed outputs/retest_commands_Dec2021/mms/triplet_normalized_Nanopore.tsv -p -o outputs/retest_commands_Dec2021/mms/
-
-        python scripts/randomizations_damage.py -dn outputs/retest_commands_Dec2021/aag/damage_in_nucleosomes.tsv -ed outputs/retest_commands_Dec2021/aag/triplet_normalized_Nanopore.tsv -p -o outputs/retest_commands_Dec2021/aag/
-
-        python scripts/randomizations_damage.py -dn outputs/retest_commands_Dec2021/ems/damage_in_nucleosomes.tsv -ed outputs/retest_commands_Dec2021/ems/triplet_normalized_Nanopore.tsv -p -o outputs/retest_commands_Dec2021/ems/ 
-
-        python scripts/randomizations_damage.py -dn outputs/retest_commands_Dec2021/cisplatin/damage_in_nucleosomes.tsv -ed outputs/retest_commands_Dec2021/cisplatin/triplet_normalized_Nanopore.tsv -p -o outputs/retest_commands_Dec2021/cisplatin/
+        python scripts/randomizations_damage.py -dn output_folder/damage_in_nucleosomes.tsv -ed output_folder/triplet_normalized_Nanopore.tsv -p -o output_folder/
 
 ## Zoom out 
 
 On top of looking at the nucleosomes, we can also look at differences between nucleosome and linkers and check for the periodicity. To do so, the following commands are needed: 
 
-        python scripts/zoom_out_nuc.py -da outputs/retest_commands_Dec2021/mms/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o outputs/retest_commands_Dec2021/mms/ -ed outputs/retest_commands_Dec2021/mms/triplet_normalized_Nanopore.tsv
+        python scripts/zoom_out_nuc.py -da output_folder/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o output_folder/ -ed output_folder/triplet_normalized_Nanopore.tsv
 
-        python scripts/zoom_out_nuc.py -da outputs/retest_commands_Dec2021/aag/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o outputs/retest_commands_Dec2021/aag/ -ed outputs/retest_commands_Dec2021/aag/triplet_normalized_Nanopore.tsv
 
-        python scripts/zoom_out_nuc.py -da outputs/retest_commands_Dec2021/ems/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o outputs/retest_commands_Dec2021/ems/ -ed outputs/retest_commands_Dec2021/ems/triplet_normalized_Nanopore.tsv
+## Chromatin features
 
-        python scripts/zoom_out_nuc.py -da outputs/retest_commands_Dec2021/cisplatin/damage_most_sig_Nanopore.tsv -ni nucleosome_info/saccer3/brogaard_saccer3.bed.nooverlapp.bed.gz -o outputs/retest_commands_Dec2021/cisplatin/ -ed outputs/retest_commands_Dec2021/cisplatin/triplet_normalized_Nanopore.tsv
+To understand the enrichment for different chromatin structures in the genome (open-close, subtelomeric regions, origins of replications ...) we run the following:  
 
+        python scripts/structure_analysis/structure.py -sd output_folder/damage_most_sig_Nanopore.tsv -o output_folder/ -pt both -ro chromatin_features/origins_replication/origins_replication.csv -nd chromatin_features/nuc_depleated_reg/NDR_regions.csv -chl chromatin_features/chromosome_info_yeast/sacCer3.chrom.sizes -a chromatin_features/accessibility/DNase-seq_saccer3.bed.gz -m chromatin_features/mappability/ -ts chromatin_features/transcription/ -po chromatin_features/polIII/polII_occupancy.bedgraph
+
+
+## Mao Data 
+
+Commmand to run the Mao data analysis (Repeat for other pairs of data with As):
+
+        python scripts/miscellaneous/analysis_mao_data.py  -ms path_to_mao_data/GSM2585798_wt_0hr_A2_1bp_Greads_bk_minus.bed -ps path_to_mao_data/GSM2585798_wt_0hr_A2_1bp_Greads_bk_plus.bed -cl chromatin_features/chromosome_info_yeast/sacCer3.chrom.sizes -o path_to_mao_data/Gs/
 
 ## Sancar Data
 
-Commands to run the sancar data properly: 
+Commands to run the sancar data properly:
 
-        python scripts/miscellaneous/sancar_analysis.py -ds /workspace/projects/nanopore/sancar_data/SRR3623538.1.mapped.bam.sort_normal -o . 
+1.- Get the fastqs 
 
-# Example data
+        fasterq-dump SRR3623538 -O output/ -e 56
+        fasterq-dump SRR3623539 -O output/ -e 56
+
+
+2.- Extracting the damage from the Cisplatin Sancar data following their guidelines. This scripts has paths hardcoded and need to be modified in order to work: 
+
+        python scripts/miscellaneous/raw_data_processing_sancar.py
+
+3.- Analysis of the damage to get the enrichment:
+
+        python scripts/miscellaneous/analysis_sancar_data.py -r1 path_to_sancar_data/SRR3623538/dedup/analysis_files_hg19/SRR3623538_1.discarded_misligated.BED_unsorted -r2 path_to_sancar_data/SRR3623539/dedup/analysis_files_hg19/SRR3623539_1.discarded_misligated.BED_unsorted -cl path_to_chromosome_human_genome/UCSC/hg19/Sequence/Chromosomes/ -o path_to_sancar_data/
