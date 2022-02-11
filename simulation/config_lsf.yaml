@@ -1,0 +1,8 @@
+__default__:
+    h_vmem: '150G'
+    threads: '30'
+    queue: ''
+subset_reads:
+    h_vmem: '100G'
+    threads: '1'
+    

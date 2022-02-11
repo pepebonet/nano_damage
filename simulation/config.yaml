@@ -1,0 +1,16 @@
+static:
+  data_dir: ''
+  analysis_dir: ''
+  treatment: []
+
+subset:
+  run: True
+  batch_size: 2000000
+
+single_reads: 
+  run: True
+  threads: 1
+
+resquiggle:
+  run: True
+  errors: 5

@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import random
+import pandas as pd
+import numpy as np
+
+configfile: 'config.yaml'
+
+data_dir = config['static']['data_dir']	
+reads_dir = os.path.join(data_dir, 'fast5') 
+reads_org = os.path.join(reads_dir, 'organized_fast5')
+analysis_dir = config['static']['analysis_dir']
+
+rule all:
+	input:
+		expand(os.path.join(
+			reads_dir, 'organized_fast5', 'treated_{ex}', 'single_read', '0'), 
+			ex=config['static']['treatment'])
+
+# ------------------------------------------------------------------------------
+# STEP 1. TREATMENT SUBSET FAST5s
+# ------------------------------------------------------------------------------
+
+#Subset of reads corresponding to a treatment
+if config.get('subset', {}).get('run', False):
+	rule subset_reads:
+		input: 
+			reads_pass = os.path.join(reads_dir, 'fast5_pass'),
+			seq_summ = os.path.join(data_dir, 'sequencing_summary.{ex}.txt')
+		output:
+			sub_dir = directory(
+				os.path.join(reads_org, 'treated_{ex}', 'multi_read')
+			)
+		params:
+			bs = config['subset']['batch_size']
+		shell:
+			'fast5_subset --input {input.reads_pass} --save_path {output.sub_dir} '
+			'--read_id_list {input.seq_summ} --batch_size {params.bs}'
+
+
+# ------------------------------------------------------------------------------
+# STEP 2. MULTI-TO-SINGLE FAST5s
+# ------------------------------------------------------------------------------
+
+#Multi-read fast5 files to single-read fast5s
+if config.get('single_reads', {}).get('run', False):
+	rule multi_to_single:
+		input:
+			sub_dir = os.path.join(reads_org, 'treated_{ex}', 'multi_read')
+		output:
+			single_read = directory(
+				os.path.join(reads_org, 'treated_{ex}', 'single_read', '0')
+			)
+		params:
+			t = config['single_reads']['threads']
+		shell:
+			'multi_to_single_fast5 --input_path {input.sub_dir} '
+			'--save_path ${output.single_read} --threads {params.t}'
+
+
+# ------------------------------------------------------------------------------
+# STEP 3. RESQUIGGLE
+# ------------------------------------------------------------------------------
+
+#Resquiggle the reads. Assign the squiggle (raw currents) 
+#to the reference genome
+if config.get('resquiggle', {}).get('run', False):
+	rule resquiggle: 
+		input: 
+			treat = os.path.join(reads_org, 'treated_{ex}', 'single_read'),
+			ref = os.path.join(
+				analysis_dir, 'Saccharomyces_cerevisiae.R64-1-1.dna.toplevel.fa'
+			)
+		output:
+			out_dir = directory(
+				os.path.join(reads_org, 'treated_{ex}', 'single_read', '0')
+			)
+		params:
+			err = config['resquiggle']['errors'],
+			t = config['single_reads']['threads']
+		run:
+			shell(
+				'tombo resquiggle {output.out_dir} {input.ref} --processes {params.t} '
+				'--num-most-common-errors {params.err}'
+			)
+			
