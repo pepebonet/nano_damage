@@ -1,5 +1,4 @@
 outputs/*
-*png
 scripts/__pycache__
 scripts/miscellaneous/__pycache__
 scripts/nucperiod/__pycache__
