@@ -5,8 +5,7 @@ Recently, Nanopore long-read sequencing has emerged as a novel technology to ena
 
 # Contents
 - [Installation](#Installation)
-- [Usage](#Usage)
-- [Example data](#Example-data)         
+- [Usage](#Usage)        
 
 # Installation
 ## Clone repository
@@ -19,8 +18,11 @@ We highly recommend to use a virtual environment to run the scripts:
 
 `Create environment and install nano_damage:`
 
-        conda create --name nanodamage python=3.8
+        conda create --name nanodamage python=3.7
         conda activate nanodamage
+        conda install -c anaconda pycurl
+        conda install -c bioconda pybedtools
+        conda install -c bioconda ont-tombo
         pip install -r requirements.txt
 
 # Usage
@@ -41,9 +43,9 @@ The objective here is to go from multi-fast5 to resquiggled fast5 files. To do s
         
         tombo resquiggle single_read/ path_to_reference_genome/ --processes 56 --num-most-common-errors 5
 
-These can also be done by adapting the Snakemake pipeline in the `simulation` folder. Changes to both the Snakefile and config.yaml will be needed. 
+These can also be done by adapting the Snakemake pipeline in the `simulation` folder. Changes to both the Snakefile and config.yaml will be needed. Then in the folder run the following:
         
-        snakemake --cores 4
+        snakemake --cores 56
 
 
 ## Detect Modifications (Tombo)
