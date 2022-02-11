@@ -21,9 +21,29 @@ We highly recommend to use a virtual environment to run the scripts:
 
         conda create --name nanodamage python=3.8
         conda activate nanodamage
-        pip install -e .
+        pip install -r requirements.txt
 
 # Usage
+
+## Handle Raw Fast5 files
+
+The objective here is to go from multi-fast5 to resquiggled fast5 files. To do so three things need to be done. 
+
+1.- Get the subset of reads of your treatment:
+
+        fast5_subset --input path_to_input/ --save_path path_to_output/ --read_id_list ../sequencing_summary_treatment.txt --batch_size 2000 -t 56
+
+2.- Get single reads: 
+
+        multi_to_single_fast5 --input_path multi_reads/ --save_path single_reads/ --threads 56
+
+3.- Resquiggle with Tombo: 
+        tombo resquiggle single_read/ path_to_reference_genome/ --processes 56 --num-most-common-errors 5
+
+These can also be done by adapting the Snakemake pipeline in the `simulation` folder. Changes to both the Snakefile and config.yaml will be needed. 
+        
+        snakemake --cores 4
+
 
 ## Enrichment
 
