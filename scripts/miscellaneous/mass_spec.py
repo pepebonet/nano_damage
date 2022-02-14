@@ -1,9 +1,7 @@
 #!/usr/bin/envs/ python3
 import os
 import click 
-import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 
