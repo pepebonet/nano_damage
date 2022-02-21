@@ -109,6 +109,6 @@ Commands to run the sancar data properly:
 
         python scripts/miscellaneous/raw_data_processing_sancar.py
 
-3.- Analysis of the damage to get the enrichment:
+3.- Analysis of the damage to get the enrichment profiles:
 
         python scripts/miscellaneous/analysis_sancar_data.py -r1 path_to_sancar_data/SRR3623538/dedup/analysis_files_hg19/SRR3623538_1.discarded_misligated.BED_unsorted -r2 path_to_sancar_data/SRR3623539/dedup/analysis_files_hg19/SRR3623539_1.discarded_misligated.BED_unsorted -cl path_to_chromosome_human_genome/UCSC/hg19/Sequence/Chromosomes/ -o path_to_sancar_data/
