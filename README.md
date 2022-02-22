@@ -57,7 +57,7 @@ Next, ones the reads are resquiggled tombo detect needs to be run to get the DNA
 
 ## Enrichment
 
-Given a folder containing the data `data_folder` the enrichment script can be run for the different treatments as follows: 
+Given a folder containing the data `data_folder` the enrichment script can be run for the different treatments as follows (the -pv and -ms commands can vary based on needs): 
 
         python scripts/enrichment_tombo.py -o output_folder/ -cl  chromatin_features/chromosome_info_yeast/sacCer3.chrom.sizes -d data_folder/sample_comparison_p_val.tombo.stats -ls -ms 1000000 -pv 0.0000001
 
